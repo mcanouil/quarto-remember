@@ -1,0 +1,353 @@
+---
+title: "Remember Extension for Quarto"
+subtitle: "Quarto Extension"
+author:
+  - name: "Mickaël CANOUIL, _Ph.D._"
+    orcid: "0000-0002-3396-4549"
+    url: "https://mickael.canouil.fr"
+format:
+  html:
+    output-file: index
+    toc: true
+    theme:
+      light: cosmo
+      dark: cyborg
+  revealjs:
+    output-file: example-revealjs
+    shift-heading-level-by: -1
+format-links:
+  - html
+  - revealjs
+embed-resources: true
+engine: markdown
+filters:
+  - remember
+---
+
+This extension provides automatic navigation position saving and restoration for both HTML documents and Reveal.js presentations.
+
+## Installation
+
+```bash
+quarto add mcanouil/quarto-remember
+```
+
+This will install the extension under the `_extensions` subdirectory.
+
+If you're using version control, you will want to check in this directory.
+
+## Usage
+
+:::: {.content-visible unless-format="revealjs"}
+
+To enable navigation tracking for HTML pages:
+
+```yaml
+---
+title: "My Document"
+format: html
+filters:
+  - remember
+---
+```
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+To enable slide position tracking for presentations:
+
+```yaml
+---
+title: "My Presentation"
+format: revealjs
+filters:
+  - remember
+---
+```
+
+:::
+
+## Testing the Extension
+
+:::: {.content-visible unless-format="revealjs"}
+
+1. Scroll down to Section 5 or beyond.
+2. Close this browser tab or navigate away.
+3. Return to this page.
+4. You should see a prompt asking if you want to resume where you were.
+5. Click **Yes** to restore your position, or **No** to start at the top.
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+1. Navigate through several slides using arrow keys or clicking.
+2. Close the browser tab.
+3. Reopen this presentation.
+4. You should see a prompt asking if you want to resume from your last slide.
+5. Click **Yes** to jump to your last position, or **No** to start at the beginning.
+
+:::
+
+## How It Works
+
+:::: {.content-visible unless-format="revealjs"}
+
+The extension tracks your scroll position and hash anchors as you navigate the page.
+
+When you return, it prompts you to resume from where you left off.
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+The extension tracks your slide position as you navigate through the presentation.
+
+When you return, it prompts you to resume from your last viewed slide.
+
+:::
+
+All data is stored locally in your browser.
+Nothing is sent to external servers.
+
+## Features
+
+- **Automatic Tracking:** Positions saved as you navigate.
+- **Smart Prompts:** Only shows when there's a meaningful position to restore.
+- **User Choice:** Always asks permission before restoring position.
+- **Page-Specific:** Each page tracked separately.
+- **Time-Aware:** Shows when you last visited.
+- **Keyboard Support:** Tab, Enter, and Escape keys work.
+- **Responsive:** Works on desktop, tablet, and mobile.
+- **Dark Mode:** Adapts to your colour scheme preference.
+
+## Section 1: Welcome
+
+This is the first section of the demonstration.
+
+:::: {.content-visible unless-format="revealjs"}
+
+Scroll past this section to test the extension's scroll position tracking.
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+Navigate to the next slides to test the extension's slide tracking.
+
+:::
+
+The extension will remember your position and offer to restore it when you return.
+
+## Section 2: Demonstration
+
+:::: {.content-visible unless-format="revealjs"}
+
+Continue scrolling through the sections.
+
+The extension tracks your vertical scroll position automatically.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+Use arrow keys or click to navigate through slides.
+
+The extension tracks which slide you're viewing.
+
+:::
+
+Try closing and reopening this page to see the prompt appear.
+
+## Section 3: Position Tracking
+
+:::: {.content-visible unless-format="revealjs"}
+
+The extension monitors your scroll position and navigation.
+
+All tracking happens automatically.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+The extension monitors your slide position.
+
+All tracking happens automatically.
+
+:::
+
+No user action required.
+
+## Section 4: User Experience
+
+When you return, a modal prompt appears with:
+
+- Title: "Resume Navigation?"
+- Message showing when you last visited.
+- Buttons: "Yes" to restore or "No" to start fresh.
+
+:::: {.content-visible unless-format="revealjs"}
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+Keyboard users can press Escape to dismiss the prompt.
+
+## Section 5: Privacy
+
+All position data is stored locally in your browser.
+
+No cookies, no external requests, no tracking.
+
+:::: {.content-visible unless-format="revealjs"}
+
+Data persists until you clear browser storage or decline the prompt.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+Data persists until you clear browser storage or decline the prompt.
+
+:::
+
+Your privacy is protected.
+
+## Section 6: Accessibility
+
+The modal prompt supports keyboard navigation:
+
+- Tab between buttons.
+- Enter to select.
+- Escape to close.
+
+:::: {.content-visible unless-format="revealjs"}
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+## Section 7: Responsive Design
+
+The modal adapts to different screen sizes.
+
+:::: {.content-visible unless-format="revealjs"}
+
+Works on desktop, tablet, and mobile devices.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+Works on all devices.
+
+:::
+
+## Section 8: Dark Mode
+
+The extension adapts to your system colour scheme.
+
+:::: {.content-visible unless-format="revealjs"}
+
+Try switching your system theme to see the modal adapt.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+Light and dark themes are supported.
+
+:::
+
+## Section 9: Limitations
+
+:::: {.content-visible unless-format="revealjs"}
+
+- Works with HTML and Reveal.js formats only.
+- Requires browser local storage.
+- Position tracked per URL.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+- Works with HTML and Reveal.js formats only.
+- Requires browser local storage.
+- Position tracked per URL.
+
+:::
+
+## Section 10: Testing Tips
+
+:::: {.content-visible unless-format="revealjs"}
+
+To test the extension:
+
+1. Scroll to different sections.
+2. Refresh the page.
+3. Test both "Yes" and "No" options.
+
+Vestibulum ante ipsum primis.
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+To test the extension:
+
+1. Navigate through multiple slides.
+2. Close and reopen the presentation.
+3. Test both "Yes" and "No" options.
+
+:::
+
+## Section 11: Final Remarks
+
+:::: {.content-visible unless-format="revealjs"}
+
+Try scrolling here, refreshing the page, and observe the prompt.
+
+:::: {style="color: #b22222; font-style: italic;"}
+{{< lipsum 1 >}}
+:::
+
+:::
+
+:::: {.content-visible when-format="revealjs"}
+
+Navigate back through the slides to test the position tracking.
+
+:::
+
+**Thank you for trying the Remember extension!**
