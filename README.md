@@ -5,7 +5,7 @@
 ## Installation
 
 ```bash
-quarto add mcanouil/quarto-remember
+quarto add mcanouil/quarto-remember@1.0.1
 ```
 
 This will install the extension under the `_extensions` subdirectory.
