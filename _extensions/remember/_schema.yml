@@ -1,0 +1,3 @@
+# _schema.yml for "remember" filter extension
+# This extension injects stateful form persistence with no user-configurable options.
+options: {}
