@@ -29,7 +29,7 @@ This extension provides automatic navigation position saving and restoration for
 ## Installation
 
 ```bash
-quarto add mcanouil/quarto-remember@1.0.1
+quarto add mcanouil/quarto-remember@1.1.0
 ```
 
 This will install the extension under the `_extensions` subdirectory.
