@@ -6,3 +6,8 @@
 
 /.quarto/
 **/*.quarto_ipynb
+/.tmp/
+/_site/
+/examples/**/_book/
+/examples/**/_freeze/
+/examples/**/.quarto/
