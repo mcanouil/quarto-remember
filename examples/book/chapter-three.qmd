@@ -1,0 +1,8 @@
+---
+title: "Chapter Three"
+---
+
+# Chapter Three
+
+When `separate-chapter-state` is `true`, returning to the book offers to
+reopen the previous chapter even if you did not scroll within it.

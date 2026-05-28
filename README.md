@@ -42,7 +42,16 @@ For Quarto books, the extension provides cross-chapter navigation tracking:
 - **Automatic Redirect:** When you return to any page in the book, you'll be automatically redirected to the chapter you were reading.
 - **Visit Timestamp:** Records when you last visited the book.
 
-The extension detects Quarto books by checking for both `.page-navigation` and `.nav-sidebar` elements.
+The extension detects Quarto books deterministically.
+The Lua filter reads the project type from `QUARTO_EXECUTE_INFO` at render time and injects a small JSON configuration block into the page head:
+
+```html
+<script id="quarto-remember-config" type="application/json">
+  {"project-type":"book","page-exclude":[],"separate-chapter-state":false}
+</script>
+```
+
+`remember.js` reads that block at startup, so detection no longer relies on theme-specific DOM selectors and survives theme changes, custom HTML layouts, and SPA-style navigation.
 
 ### Reveal.js Presentations
 
@@ -66,12 +75,31 @@ When you return to the presentation, you'll be prompted to resume from your last
 - **Responsive:** Mobile-friendly modal design.
 - **Dark Mode:** Adapts to user's colour scheme preference (supports both system preference and Quarto's `.quarto-dark`/`.quarto-light` classes).
 
+## Configuration
+
+All options are optional and live under `extensions.remember` in either the document front matter or a project `_quarto.yml`.
+
+```yaml
+extensions:
+  remember:
+    page-exclude:
+      - /drafts/*
+      - /search.html
+    separate-chapter-state: true
+```
+
+- `page-exclude` is a list of pathname patterns to opt out of persistence.
+  Each entry is matched against `window.location.pathname` as a literal substring or as a glob where `*` stands for one path segment.
+- `separate-chapter-state` (default `false`) stores the current chapter of a Quarto book independently from the scroll position inside that chapter, so a return visit can offer to reopen the previous chapter even if the user did not scroll.
+
 ## Limitations
 
 - Only works with HTML-based output formats (`html`, `revealjs`, and `book`).
-- Requires browser support for `localStorage` (not available in some private browsing modes).
-- For regular pages, position is tracked per pathname. For books, position is tracked per book (all chapters share the same tracking).
-- Book detection requires both `.page-navigation` and `.nav-sidebar` elements in the DOM.
+- Requires browser support for `localStorage`.
+  Private browsing modes that throw on write are detected at startup and the extension disables itself silently with a single console warning.
+- For regular pages, position is tracked per pathname.
+  For books, position is tracked per book (all chapters share the same tracking by default).
+- Project-type detection requires Quarto to populate `QUARTO_EXECUTE_INFO`, which it does for every supported render path.
 
 ## Example
 
