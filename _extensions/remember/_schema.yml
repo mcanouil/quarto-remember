@@ -1,8 +1,8 @@
-# _schema.yml for "remember" filter extension
+# Schema for the remember extension
 # Configuration options live under extensions.remember in the document or
 # project metadata. All options are optional.
 
-$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v1/extension-schema.json
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
 
 options:
   page-exclude:
