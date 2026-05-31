@@ -22,6 +22,10 @@ embed-resources: true
 engine: markdown
 filters:
   - remember
+extensions:
+  remember:
+    page-exclude: []
+    separate-chapter-state: false
 ---
 
 This extension provides automatic navigation position saving and restoration for both HTML documents and Reveal.js presentations.
