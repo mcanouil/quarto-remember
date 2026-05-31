@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.3.0 (2026-05-31)
+
 ### New Features
 
 - feat: Read the Quarto project type from `QUARTO_EXECUTE_INFO` in the Lua filter and inject it into the page as a JSON `<script id="quarto-remember-config">` block, so `remember.js` distinguishes book, website, and single-document projects deterministically instead of guessing from theme-specific DOM selectors.
