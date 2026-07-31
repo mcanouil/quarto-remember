@@ -1,0 +1,85 @@
+---
+title: "Examples"
+subtitle: "What a reader sees, and when."
+description: "The remember extension running on this site, with the configuration behind it and the behaviour to expect on each format."
+---
+
+This site runs the extension on itself.
+
+::: {.callout-tip}
+## Try it
+
+Scroll to the bottom of this page, follow a link to another page, then come back.
+A prompt should offer to return you to where you were, and say how long ago that was.
+:::
+
+## The configuration behind this site
+
+```yaml
+filters:
+  - remember
+
+extensions:
+  remember:
+    page-exclude:
+      - /changelog.html
+```
+
+Every page here is tracked apart from the changelog, which is excluded to show `page-exclude` working: scroll it, leave, come back, and nothing is offered.
+
+## What is remembered where
+
+| On this site | Behaviour |
+| --- | --- |
+| Any page but the changelog | Scroll position and section restored on request. |
+| The changelog | Nothing stored, nothing offered. |
+
+: This site's behaviour, page by page. {.striped .hover tbl-colwidths="[36,64]"}
+
+## Excluding pages
+
+Each entry is matched against the browser's pathname, as a literal substring or as a glob where `*` covers one path segment:
+
+```yaml
+extensions:
+  remember:
+    page-exclude:
+      - /search.html      # this exact page
+      - /drafts/*         # every page one level under /drafts/
+      - /appendix         # any path containing this text
+```
+
+## Books
+
+In a book the extension remembers the chapter as well as the position in it, and a return visit redirects to that chapter rather than offering a scroll.
+
+```yaml
+extensions:
+  remember:
+    separate-chapter-state: true
+```
+
+With that on, the chapter is stored separately from the scroll position, so a reader who opened a chapter without scrolling is still offered it on their return.
+
+## Presentations
+
+In a RevealJS deck the slide indices are stored instead: horizontal, vertical, and fragment.
+Returning to the deck offers the slide that was on screen, fragment included.
+
+## When nothing happens
+
+The prompt is deliberately reticent, and these are the usual reasons it stays away:
+
+| Reason | Detail |
+| --- | --- |
+| Nothing worth restoring | Under 100 pixels of scroll, and not on a specific slide. |
+| Too soon | It appears at most once every five seconds. |
+| Already declined | Declining clears the stored position rather than deferring it. |
+| Storage refused | A browser that will not write to `localStorage`, such as a private window, disables the feature with one console warning. |
+| Page excluded | The pathname matches an entry in `page-exclude`. |
+
+: Why a prompt may not appear. {.striped .hover tbl-colwidths="[30,70]"}
+
+## Source
+
+The repository ships a short, standalone starting point you can copy: [`example.qmd`](https://github.com/mcanouil/quarto-remember/blob/main/example.qmd).

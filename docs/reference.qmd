@@ -1,0 +1,81 @@
+---
+title: "Reference"
+subtitle: "Every option the remember extension accepts."
+description: "The complete remember configuration: the two options, what is stored where, how a book is detected, and the conditions under which a reader is prompted."
+---
+
+## Enabling the filter
+
+```yaml
+filters:
+  - remember
+```
+
+## Options
+
+```yaml
+extensions:
+  remember:
+    page-exclude:
+      - /drafts/*
+      - /search.html
+    separate-chapter-state: true
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `page-exclude` | list of strings | empty | Pathnames to leave out of persistence. |
+| `separate-chapter-state` | boolean | `false` | In a book, stores the chapter separately from the scroll position inside it. Ignored elsewhere. |
+
+: Document and project options. {.striped .hover tbl-colwidths="[24,16,10,50]"}
+
+Each `page-exclude` entry is matched against the browser's `window.location.pathname`, either as a literal substring or as a glob where `*` stands for one path segment.
+
+With `separate-chapter-state` on, a return visit can offer to reopen the previous chapter even when the reader never scrolled in it.
+
+## What is stored
+
+| Format | Kept |
+| --- | --- |
+| HTML document | Scroll position, the section anchor being viewed, and the time of the visit. |
+| Quarto book | The chapter, the scroll position within it, and the time of the visit. |
+| RevealJS | The horizontal, vertical, and fragment indices, and the time of the visit. |
+
+: What each format remembers. {.striped .hover tbl-colwidths="[22,78]"}
+
+Everything is written to the reader's `localStorage`.
+Nothing leaves the browser.
+
+A page is tracked by its pathname; a book is tracked as a whole, so its chapters share one entry unless `separate-chapter-state` is on.
+
+## When the reader is prompted
+
+The prompt is deliberately quiet:
+
+- it appears only when there is something worth restoring, which means more than 100 pixels of scroll, or a specific slide;
+- it appears at most once every five seconds;
+- it says how long ago the visit was, so the reader can judge;
+- declining clears the stored position rather than asking again.
+
+<kbd>Esc</kbd> dismisses it, and it carries the ARIA attributes a screen reader needs.
+
+In a book the behaviour is stronger: returning to any page redirects to the chapter that was being read.
+
+## How a book is detected
+
+The filter reads the project type from `QUARTO_EXECUTE_INFO` while rendering, and writes it into the page:
+
+```html
+<script id="quarto-remember-config" type="application/json">
+  {"project-type":"book","page-exclude":[],"separate-chapter-state":false}
+</script>
+```
+
+The script reads that at startup rather than inspecting the page, so detection survives a theme change, a custom layout, or single-page navigation.
+
+## Limitations
+
+- HTML formats only: `html`, `revealjs`, and book projects.
+- `localStorage` is required. A browser that refuses to write to it, as a private window may, disables the feature with one console warning rather than failing.
+- Outside a book, position is tracked per pathname, so two pages are independent.
+- Within a book, all chapters share one entry by default.
