@@ -9,8 +9,9 @@ This site runs the extension on itself.
 ::: {.callout-tip}
 ## Try it
 
-Scroll to the bottom of this page, follow a link to another page, then come back.
-A prompt should offer to return you to where you were, and say how long ago that was.
+Scroll to the bottom of this page, follow a link to another page, then come back: you should land where you were rather than at the top.
+To see the prompt instead, close the tab after scrolling and open the page again.
+A tab that has already moved around the site restores the position without asking; a new one asks, and says how long ago the visit was.
 :::
 
 ## The configuration behind this site
@@ -31,7 +32,7 @@ Every page here is tracked apart from the changelog, which is excluded to show `
 
 | On this site | Behaviour |
 | --- | --- |
-| Any page but the changelog | Scroll position and section restored on request. |
+| Any page but the changelog | Scroll position and section restored, on request when the visit is new. |
 | The changelog | Nothing stored, nothing offered. |
 
 : This site's behaviour, page by page. {.striped .hover tbl-colwidths="[36,64]"}
@@ -51,7 +52,7 @@ extensions:
 
 ## Books
 
-In a book the extension remembers the chapter as well as the position in it, and a return visit redirects to that chapter rather than offering a scroll.
+In a book the extension remembers the chapter as well as the position in it, and a return visit offers that chapter rather than a scroll.
 
 ```yaml
 extensions:
@@ -72,7 +73,8 @@ The prompt is deliberately reticent, and these are the usual reasons it stays aw
 
 | Reason | Detail |
 | --- | --- |
-| Nothing worth restoring | Under 100 pixels of scroll, and not on a specific slide. |
+| Nothing worth restoring | Under 100 pixels of scroll, no section anchor, and not on a specific slide. |
+| Already moving around the site | Within one browser tab the position is restored without a prompt. |
 | Too soon | It appears at most once every five seconds. |
 | Already declined | Declining clears the stored position rather than deferring it. |
 | Storage refused | A browser that will not write to `localStorage`, such as a private window, disables the feature with one console warning. |

@@ -30,6 +30,7 @@ extensions:
 : Document and project options. {.striped .hover tbl-colwidths="[24,16,10,50]"}
 
 Each `page-exclude` entry is matched against the browser's `window.location.pathname`, either as a literal substring or as a glob where `*` stands for one path segment.
+An entry with no `*` matches anywhere in the pathname; an entry with one has to match the whole of it.
 
 With `separate-chapter-state` on, a return visit can offer to reopen the previous chapter even when the reader never scrolled in it.
 
@@ -46,20 +47,24 @@ With `separate-chapter-state` on, a return visit can offer to reopen the previou
 Everything is written to the reader's `localStorage`.
 Nothing leaves the browser.
 
-A page is tracked by its pathname; a book is tracked as a whole, so its chapters share one entry unless `separate-chapter-state` is on.
+Outside a book the entry names the pathname; in a book it names the directory the chapters sit in, which is what lets a return visit cross from one chapter to another.
+
+One position is kept at a time, so reading a second page replaces the first.
+`separate-chapter-state` records the chapter in a second entry alongside it.
 
 ## When the reader is prompted
 
 The prompt is deliberately quiet:
 
-- it appears only when there is something worth restoring, which means more than 100 pixels of scroll, or a specific slide;
+- it appears on a new visit alone, which means a browser tab that has not yet moved from one page to another; within a tab that has, the position is restored without asking;
+- it appears only when there is something worth restoring, which means more than 100 pixels of scroll, a section anchor, or a slide;
 - it appears at most once every five seconds;
 - it says how long ago the visit was, so the reader can judge;
 - declining clears the stored position rather than asking again.
 
-<kbd>Esc</kbd> dismisses it, and it carries the ARIA attributes a screen reader needs.
+<kbd>Esc</kbd> counts as declining, and the dialogue carries the attributes a screen reader needs: `role="alertdialog"`, `aria-modal`, and a label and description bound to its title and message.
 
-In a book the behaviour is stronger: returning to any page redirects to the chapter that was being read.
+In a book the prompt offers the chapter that was being read, and accepting it navigates there.
 
 ## How a book is detected
 
@@ -67,7 +72,7 @@ The filter reads the project type from `QUARTO_EXECUTE_INFO` while rendering, an
 
 ```html
 <script id="quarto-remember-config" type="application/json">
-  {"project-type":"book","page-exclude":[],"separate-chapter-state":false}
+  {"page-exclude":[],"project-type":"book","separate-chapter-state":false}
 </script>
 ```
 
@@ -77,5 +82,5 @@ The script reads that at startup rather than inspecting the page, so detection s
 
 - HTML formats only: `html`, `revealjs`, and book projects.
 - `localStorage` is required. A browser that refuses to write to it, as a private window may, disables the feature with one console warning rather than failing.
-- Outside a book, position is tracked per pathname, so two pages are independent.
-- Within a book, all chapters share one entry by default.
+- One position is stored at a time, so scrolling a second page replaces the first.
+- In a book the chapters share that entry, which is how a chapter is restored; `separate-chapter-state` adds a second entry for the chapter alone.
