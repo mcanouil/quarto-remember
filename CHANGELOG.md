@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.3.1 (2026-08-01)
+
 ### Documentation
 
 - docs: Add a documentation website under `docs/`, built on the `atelier` project type and published to <https://m.canouil.dev/quarto-remember/>, running the extension on itself so a reader can try it.

@@ -7,7 +7,7 @@ Everything is kept in the reader's own browser; nothing is sent anywhere.
 ## Installation
 
 ```bash
-quarto add mcanouil/quarto-remember@1.3.0
+quarto add mcanouil/quarto-remember@1.3.1
 ```
 
 This will install the extension under the `_extensions` subdirectory.
