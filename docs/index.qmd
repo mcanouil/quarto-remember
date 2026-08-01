@@ -1,0 +1,78 @@
+---
+title: "Remember"
+subtitle: "Put a reader back where they left off."
+description: "What the remember extension does, how to enable it, and how to try it on this page."
+authors:
+  - name: "Mickaël CANOUIL, _Ph.D._"
+    orcid: "0000-0002-3396-4549"
+    url: "https://mickael.canouil.fr"
+---
+
+A long page, a book, or a slide deck is rarely read in one sitting.
+The browser remembers the URL and nothing else, so coming back means scrolling to find the place again, or guessing which chapter it was.
+
+`remember` keeps the position in the reader's own browser and offers it back on the next visit.
+On a page it is the scroll position and the section; in a book it is the chapter; in a deck it is the slide.
+
+::: {.callout-tip}
+## Try it on this site
+
+Scroll down this page, go to the [Reference](reference.qmd), then come back: the site runs the extension on itself and returns you to where you were.
+Close the tab after scrolling and open the page again to be asked first.
+The prompt is for a new visit rather than for a move around the site.
+:::
+
+## Installation
+
+```bash
+quarto add {{< var extension.reference >}}
+```
+
+This will install the extension under the `_extensions` subdirectory.
+If you are using version control, you will want to check in this directory.
+
+Or install it from your editor with [Quarto Wizard](https://m.canouil.dev/quarto-wizard):
+
+::: {.btn-group role="group" aria-label="Quarto Wizard installer options"}
+
+[Visual Studio Code](vscode://mcanouil.quarto-wizard/install?repo={{< var extension.wizard-reference >}}){.btn .btn-outline-primary title="Install {{< var extension.reference >}} in Visual Studio Code using the Quarto Wizard extension."}
+[Positron](positron://mcanouil.quarto-wizard/install?repo={{< var extension.wizard-reference >}}){.btn .btn-outline-primary title="Install {{< var extension.reference >}} in Positron using the Quarto Wizard extension."}
+[VSCodium](vscodium://mcanouil.quarto-wizard/install?repo={{< var extension.wizard-reference >}}){.btn .btn-outline-primary title="Install {{< var extension.reference >}} in VSCodium using the Quarto Wizard extension."}
+
+:::
+
+## Quick start
+
+```yaml
+filters:
+  - remember
+```
+
+That is the whole of it.
+Nothing else is required, and every option is optional.
+
+Opt individual pages out when they are not worth resuming:
+
+```yaml
+extensions:
+  remember:
+    page-exclude:
+      - /search.html
+      - /drafts/*
+```
+
+See the [Reference](reference.qmd) for every option, and the [Examples](examples.qmd) for what a reader sees.
+
+## Where it works
+
+HTML documents, Quarto books, and RevealJS presentations.
+
+Everything is kept in the reader's browser, in `localStorage`.
+Nothing is sent anywhere, and a browser that refuses to store it, a private window among them, turns the feature off.
+
+## Links
+
+- [Reference](reference.qmd) for every option.
+- [Examples](examples.qmd) for what the reader sees and when.
+- [Changelog](changelog.qmd) for what each release changed.
+- [Source and issues](https://github.com/mcanouil/quarto-remember) on GitHub.
