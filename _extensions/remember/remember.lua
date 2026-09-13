@@ -83,49 +83,25 @@ local function resolve_project_type()
   return 'default'
 end
 
---- Read a list-valued option from `extensions.remember.<key>`.
---- Accepts a single string or a list of strings.
---- @param meta table Document metadata
---- @param key string The option name (e.g. `"page-exclude"`)
+--- Normalise a resolved list option to a list of strings.
+--- The schema accepts a string or a list, and the validator returns whichever
+--- the document wrote, so a single entry becomes a one item list here.
+--- @param value string|table<integer, string>|nil The resolved option value
 --- @return table<integer, string> The list of string values (possibly empty)
-local function read_string_list(meta, key)
+local function as_string_list(value)
+  if value == nil then return {} end
+
+  if type(value) ~= 'table' then
+    local entry = tostring(value)
+    return entry ~= '' and { entry } or {}
+  end
+
   local result = {}
-  local config = meta['extensions'] and meta['extensions'][EXTENSION_NAME]
-  if not config then return result end
-
-  local value = config[key]
-  if value == nil then return result end
-
-  if value.t == 'MetaInlines' or type(value) == 'string' then
-    local entry = pandoc.utils.stringify(value)
+  for _, item in ipairs(value) do
+    local entry = tostring(item)
     if entry ~= '' then result[#result + 1] = entry end
-    return result
   end
-
-  if value.t == 'MetaList' or (type(value) == 'table' and #value > 0) then
-    for _, item in ipairs(value) do
-      local entry = pandoc.utils.stringify(item)
-      if entry ~= '' then result[#result + 1] = entry end
-    end
-  end
-
   return result
-end
-
---- Read a boolean option from `extensions.remember.<key>`.
---- @param meta table Document metadata
---- @param key string The option name
---- @param default boolean Value returned when the option is unset
---- @return boolean The resolved boolean value
-local function read_boolean(meta, key, default)
-  local config = meta['extensions'] and meta['extensions'][EXTENSION_NAME]
-  if not config or config[key] == nil then
-    return default
-  end
-  local raw = pandoc.utils.stringify(config[key])
-  if raw == 'true' then return true end
-  if raw == 'false' then return false end
-  return default
 end
 
 --- Encode a Lua value as a JSON literal suitable for inlining in a
@@ -181,8 +157,10 @@ local function inject_dependencies(meta)
   })
 
   local project_type = resolve_project_type()
-  local page_exclude = read_string_list(meta, 'page-exclude')
-  local separate_chapter_state = read_boolean(meta, 'separate-chapter-state', false)
+  -- The schema decides both values, so `separate-chapter-state: no` turns the
+  -- feature off. Reading the document itself left it on.
+  local page_exclude = as_string_list(checker:option('page-exclude'))
+  local separate_chapter_state = checker:option('separate-chapter-state') == true
 
   local script = build_bootstrap_script(project_type, page_exclude, separate_chapter_state)
   quarto.doc.include_text('in-header', script)
