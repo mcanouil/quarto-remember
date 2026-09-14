@@ -4,7 +4,7 @@
 
 ### Bug Fixes
 
-- fix: Read the options through the schema, so `separate-chapter-state: yes` now takes effect. Parsing the document text accepted `true` and `false` only. (#28)
+- fix: Read the options through the schema, so a value that is not a boolean is reported rather than falling back to the default in silence. Parsing the document text accepted `true` and `false` only. (#28)
 - fix: Declare `page-exclude` as a string or a list, which is what the extension has always accepted. The schema declared a list alone, so the check rejected a single pattern written on its own. (#28)
 
 ### Documentation
