@@ -6,6 +6,7 @@
 
 - fix: Read the options through the schema, so a value that is not a boolean is reported rather than falling back to the default in silence. Parsing the document text accepted `true` and `false` only. (#28)
 - fix: Declare `page-exclude` as a string or a list, which is what the extension has always accepted. The schema declared a list alone, so the check rejected a single pattern written on its own. (#28)
+- fix: Gate the options check on the html:js format so non-acting formats stay silent. (#28)
 
 ### Documentation
 
