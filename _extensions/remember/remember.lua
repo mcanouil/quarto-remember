@@ -143,11 +143,11 @@ end
 --- @param meta table Document metadata
 --- @return table Modified metadata
 local function inject_dependencies(meta)
-  checker:options(meta)
-
   if not quarto.doc.is_format('html:js') then
     return meta
   end
+
+  checker:options(meta)
 
   html_mod.ensure_html_dependency({
     name = EXTENSION_NAME,
