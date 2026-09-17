@@ -7,6 +7,7 @@
 - fix: Read the options through the schema, so a value that is not a boolean is reported rather than falling back to the default in silence. Parsing the document text accepted `true` and `false` only. (#28)
 - fix: Declare `page-exclude` as a string or a list, which is what the extension has always accepted. The schema declared a list alone, so the check rejected a single pattern written on its own. (#28)
 - fix: Gate the options check on the html:js format so non-acting formats stay silent. (#28)
+- fix: Report a key nested inside an option as a warning rather than an error, so one nested typo does not invalidate the whole configuration. This matches how the extension already reports an unknown key at the top of its own block. (#28)
 
 ### Documentation
 
@@ -16,7 +17,7 @@
 
 - build: Update the vendored Lua modules to 2.3.0, which includes the `schema-check` fix for an extension whose entry points are in a subdirectory. A module no longer carries a version line in its header, so its checksum changes only when its code changes. (#26)
 - build: Fetch the schema validator from a Quarto Wizard release asset rather than a raw path inside its repository, which a refactor could move without notice. The vendored file is unchanged. (#27)
-- build: Update the vendored Lua modules to 2.5.0, which adds the accessor that reads what the schema resolves an option to. The schema validator moves to its own release train and is pinned at `schema-v2.1.0`, which accepts only `true` and `false` as a boolean. (#28)
+- build: Update the vendored Lua modules to 2.5.0, which adds the accessor that reads what the schema resolves an option to. The schema validator moves to its own release train and is pinned at `schema-v2.2.0`, which accepts only `true` and `false` as a boolean. (#28)
 
 ## 1.4.0 (2026-09-07)
 
