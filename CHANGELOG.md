@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Refactoring
+
+- build: Update the vendored schema validator to `schema-v2.3.0`, which adds the `cells` section for code cell options. The extension declares no cell options, so its checks are unchanged. (#32)
+
 ## 1.4.1 (2026-09-23)
 
 ### Bug Fixes
