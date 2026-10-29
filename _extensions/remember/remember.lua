@@ -17,6 +17,7 @@ local EXTENSION_NAME = 'remember'
 --- Load modules
 local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local metadata = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/metadata.lua'):gsub('%.lua$', ''))
 local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
 local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
 
@@ -41,40 +42,27 @@ local checker = check.new(schema, EXTENSION_NAME)
 --- Resolve the Quarto project type from `QUARTO_EXECUTE_INFO`.
 --- Returns one of `"book"`, `"website"`, or `"default"`.
 --- `"default"` covers single documents and any project whose type is neither
---- a book nor a website. When the file cannot be read or parsed, the function
---- logs a warning and returns `"default"` so detection degrades safely.
+--- a book nor a website. A book is checked first, because a book project also
+--- carries `website` metadata.
+--- When the variable is unset, or the file has no `format.metadata` table, the
+--- function returns `"default"` with no warning. When the file cannot be read,
+--- is empty, or is not valid JSON, it logs a warning and returns `"default"`,
+--- so detection degrades safely.
 --- @return string project_type One of `"book"`, `"website"`, or `"default"`
 local function resolve_project_type()
-  local path = os.getenv('QUARTO_EXECUTE_INFO')
-  if not path or path == '' then
-    return 'default'
-  end
-
-  local file = io.open(path, 'r')
-  if not file then
-    log.log_warning(EXTENSION_NAME,
-      "Could not open QUARTO_EXECUTE_INFO at '" .. path .. "'; assuming a single-document project.")
-    return 'default'
-  end
-
-  local content = file:read('*a')
-  file:close()
-
-  if not content or content == '' then
-    log.log_warning(EXTENSION_NAME,
-      "QUARTO_EXECUTE_INFO is empty; assuming a single-document project.")
-    return 'default'
-  end
-
-  local ok, info = pcall(quarto.json.decode, content)
-  if not ok or type(info) ~= 'table' then
-    log.log_warning(EXTENSION_NAME,
-      "Could not parse QUARTO_EXECUTE_INFO; assuming a single-document project.")
-    return 'default'
-  end
-
-  local format_meta = info['format'] and info['format']['metadata']
-  if type(format_meta) ~= 'table' then
+  local format_meta, reason = metadata.get_project_metadata()
+  if not format_meta then
+    if reason == 'file is unreadable' then
+      log.log_warning(EXTENSION_NAME,
+        "Could not open QUARTO_EXECUTE_INFO at '" .. os.getenv('QUARTO_EXECUTE_INFO') ..
+        "'; assuming a single-document project.")
+    elseif reason == 'file is empty' then
+      log.log_warning(EXTENSION_NAME,
+        "QUARTO_EXECUTE_INFO is empty; assuming a single-document project.")
+    elseif reason == 'invalid JSON' then
+      log.log_warning(EXTENSION_NAME,
+        "Could not parse QUARTO_EXECUTE_INFO; assuming a single-document project.")
+    end
     return 'default'
   end
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Refactoring
+
+- build: Update the vendored Lua modules to 2.7.0 and add `metadata.lua`, so the project type comes from the shared `get_project_metadata` helper. The warnings stay the same for any file that Quarto writes. (#31)
+
 ## 1.4.1 (2026-09-23)
 
 ### Bug Fixes
