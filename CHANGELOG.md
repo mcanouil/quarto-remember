@@ -5,6 +5,7 @@
 ### Refactoring
 
 - build: Update the vendored Lua modules to 2.7.0 and add `metadata.lua`, so the project type comes from the shared `get_project_metadata` helper. The warnings stay the same for any file that Quarto writes. (#31)
+- build: Update the vendored schema validator to `schema-v2.3.0`, which adds the `cells` section for code cell options. The extension declares no cell options, so its checks are unchanged. (#32)
 
 ## 1.4.1 (2026-09-23)
 
