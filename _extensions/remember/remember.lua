@@ -17,6 +17,7 @@ local EXTENSION_NAME = 'remember'
 --- Load modules
 local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
 local metadata = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/metadata.lua'):gsub('%.lua$', ''))
 local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
 local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
@@ -92,6 +93,89 @@ local function as_string_list(value)
   return result
 end
 
+--- Return the path of the source file, relative to the project root, with
+--- `/` separators. A single document rendered outside a project has no root,
+--- so its base name stands in for the relative path. A file outside the
+--- project root gets `nil`, so no pattern can match it by accident.
+--- @return string|nil The project-relative source path
+local function source_path()
+  local input = (quarto.doc.input_file or ''):gsub('\\', '/')
+  local root = quarto.project.directory
+  if root == nil or root == '' then
+    return (input:match('[^/]+$') or input)
+  end
+  root = root:gsub('\\', '/'):gsub('/+$', '') .. '/'
+  if input:sub(1, #root) == root then
+    return input:sub(#root + 1)
+  end
+  return nil
+end
+
+--- Resolve a pattern that Quarto made relative to the page.
+--- Quarto rewrites a project metadata string that names an existing file so
+--- that it is relative to the page being rendered: on `guide/intro.qmd`, the
+--- entry `guide/intro.qmd` arrives as `../guide/intro.qmd`. Such a pattern is
+--- joined to the folder of the page and collapsed back to a project-relative
+--- path. Any other pattern is already relative to the project. A pattern
+--- that climbs above the project root names no page, so it gets `nil`.
+--- @param pattern string The pattern as the filter receives it
+--- @param page string The project-relative path of the page
+--- @return string|nil The project-relative pattern
+local function project_relative(pattern, page)
+  pattern = pattern:gsub('\\', '/')
+  if pattern:sub(1, 3) ~= '../' then
+    return (pattern:gsub('^%./', ''))
+  end
+  local parts = {}
+  for segment in (page:match('^(.*)/[^/]*$') or ''):gmatch('[^/]+') do
+    parts[#parts + 1] = segment
+  end
+  for segment in pattern:gmatch('[^/]+') do
+    if segment == '..' then
+      if #parts == 0 then return nil end
+      parts[#parts] = nil
+    elseif segment ~= '.' then
+      parts[#parts + 1] = segment
+    end
+  end
+  return table.concat(parts, '/')
+end
+
+--- Turn a `page-exclude` pattern into an anchored Lua pattern. Every
+--- character is literal except `*`, which matches within one path segment.
+--- @param pattern string A project-relative path, optionally with `*`
+--- @return string The anchored Lua pattern
+local function to_lua_pattern(pattern)
+  return '^' .. str.escape_lua_pattern(pattern):gsub('%%%*', '[^/]*') .. '$'
+end
+
+--- Report whether the source file matches one of the `page-exclude` patterns.
+--- @param patterns table<integer, string> Project-relative source paths
+--- @return boolean True when the page must carry no remember code
+local function is_excluded(patterns)
+  if #patterns == 0 then return false end
+  for _, pattern in ipairs(patterns) do
+    if pattern:sub(1, 1) == '/' or pattern:match('%.html$') then
+      log.log_warning(EXTENSION_NAME,
+        "page-exclude entry '" .. pattern .. "' looks like a URL. " ..
+        "Entries name source files relative to the project, " ..
+        "for example 'about.qmd' or 'drafts/*.qmd'.")
+    end
+  end
+  local path = source_path()
+  if path == nil then
+    log.log_warning(EXTENSION_NAME,
+      "Could not place '" .. tostring(quarto.doc.input_file) .. "' inside the project directory '" ..
+      tostring(quarto.project.directory) .. "', so page-exclude is not applied to it.")
+    return false
+  end
+  for _, pattern in ipairs(patterns) do
+    local relative = project_relative(pattern, path)
+    if relative and path:match(to_lua_pattern(relative)) then return true end
+  end
+  return false
+end
+
 --- Encode a Lua value as a JSON literal suitable for inlining in a
 --- `<script>` block. The result never contains the substring `</`, so
 --- it cannot prematurely terminate the script element.
@@ -104,17 +188,15 @@ local function encode_for_script(value)
 end
 
 --- Build the bootstrap `<script>` that hands the resolved options to the
---- client. The payload is intentionally minimal: project type, the
---- page-exclusion list, and the separate-chapter-state flag.
+--- client. The payload is intentionally minimal: project type and the
+--- separate-chapter-state flag.
 --- @param project_type string One of `"book"`, `"website"`, or `"default"`
---- @param page_exclude table<integer, string> Paths/patterns to skip
 --- @param separate_chapter_state boolean Whether to store chapter and
 ---   scroll position under independent keys
 --- @return string Raw HTML containing the bootstrap script
-local function build_bootstrap_script(project_type, page_exclude, separate_chapter_state)
+local function build_bootstrap_script(project_type, separate_chapter_state)
   local payload = {
     ['project-type'] = project_type,
-    ['page-exclude'] = page_exclude,
     ['separate-chapter-state'] = separate_chapter_state,
   }
   return string.format(
@@ -137,6 +219,12 @@ local function inject_dependencies(meta)
 
   checker:options(meta)
 
+  -- An excluded page gets no script, no stylesheet and no configuration, so
+  -- it carries no remember code at all.
+  if is_excluded(as_string_list(checker:option('page-exclude'))) then
+    return meta
+  end
+
   html_mod.ensure_html_dependency({
     name = EXTENSION_NAME,
     version = '1.0.0',
@@ -145,12 +233,11 @@ local function inject_dependencies(meta)
   })
 
   local project_type = resolve_project_type()
-  -- The schema decides both values, so `separate-chapter-state: no` turns the
+  -- The schema decides the value, so `separate-chapter-state: no` turns the
   -- feature off. Reading the document itself left it on.
-  local page_exclude = as_string_list(checker:option('page-exclude'))
   local separate_chapter_state = checker:option('separate-chapter-state') == true
 
-  local script = build_bootstrap_script(project_type, page_exclude, separate_chapter_state)
+  local script = build_bootstrap_script(project_type, separate_chapter_state)
   quarto.doc.include_text('in-header', script)
 
   return meta

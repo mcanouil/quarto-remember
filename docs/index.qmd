@@ -57,8 +57,8 @@ Opt individual pages out when they are not worth resuming:
 extensions:
   remember:
     page-exclude:
-      - /search.html
-      - /drafts/*
+      - search.qmd
+      - drafts/*.qmd
 ```
 
 See the [Reference](reference.qmd) for every option, and the [Examples](examples.qmd) for what a reader sees.

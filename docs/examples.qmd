@@ -23,31 +23,35 @@ filters:
 extensions:
   remember:
     page-exclude:
-      - /changelog.html
+      - index.qmd
+      - 404.qmd
+      - changelog.qmd
 ```
 
-Every page here is tracked apart from the changelog, which is excluded to show `page-exclude` working: scroll it, leave, come back, and nothing is offered.
+Every page here is tracked apart from the home page, the 404 page, and the changelog.
+They are excluded to show `page-exclude` working: scroll the changelog, leave, come back, and nothing is offered.
 
 ## What is remembered where
 
 | On this site | Behaviour |
 | --- | --- |
-| Any page but the changelog | Scroll position and section restored, on request when the visit is new. |
-| The changelog | Nothing stored, nothing offered. |
+| The home page, the 404 page, and the changelog | Nothing stored, nothing offered. |
+| Any other page | Scroll position and section restored, on request when the visit is new. |
 
 : This site's behaviour, page by page. {.striped .hover tbl-colwidths="[36,64]"}
 
 ## Excluding pages
 
-Each entry is matched against the browser's pathname, as a literal substring or as a glob where `*` covers one path segment:
+Each entry names a source file relative to the project, and must match the whole path.
+A `*` covers any text inside one path segment:
 
 ```yaml
 extensions:
   remember:
     page-exclude:
-      - /search.html      # this exact page
-      - /drafts/*         # every page one level under /drafts/
-      - /appendix         # any path containing this text
+      - search.qmd        # this file at the project root
+      - drafts/*.qmd      # every file directly in drafts/
+      - "*/appendix.qmd"  # appendix.qmd one folder below the root
 ```
 
 ## Books
@@ -78,7 +82,7 @@ The prompt is deliberately reticent, and these are the usual reasons it stays aw
 | Too soon | It appears at most once every five seconds. |
 | Already declined | Declining clears the stored position rather than deferring it. |
 | Storage refused | A browser that will not write to `localStorage`, such as a private window, disables the feature with one console warning. |
-| Page excluded | The pathname matches an entry in `page-exclude`. |
+| Page excluded | The source file matches an entry in `page-exclude`, so the page has no remember code. |
 
 : Why a prompt may not appear. {.striped .hover tbl-colwidths="[30,70]"}
 

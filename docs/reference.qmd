@@ -17,20 +17,25 @@ filters:
 extensions:
   remember:
     page-exclude:
-      - /drafts/*
-      - /search.html
+      - drafts/*.qmd
+      - search.qmd
     separate-chapter-state: true
 ```
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `page-exclude` | list of strings | empty | Pathnames to leave out of persistence. |
+| `page-exclude` | list of strings | empty | Source files to leave out of persistence. |
 | `separate-chapter-state` | boolean | `false` | In a book, stores the chapter separately from the scroll position inside it. Ignored elsewhere. |
 
 : Document and project options. {.striped .hover tbl-colwidths="[24,16,10,50]"}
 
-Each `page-exclude` entry is matched against the browser's `window.location.pathname`, either as a literal substring or as a glob where `*` stands for one path segment.
-An entry with no `*` matches anywhere in the pathname; an entry with one has to match the whole of it.
+Each `page-exclude` entry is a path to a source file, relative to the project root, such as `index.qmd` or `drafts/*.qmd`.
+An entry must match the whole path, so `index.qmd` matches the root page and not `guide/index.qmd`.
+A `*` matches any text inside one path segment.
+The match occurs when Quarto renders the page, so the result is the same on every host and under every sub-path.
+An excluded page gets no remember script, no stylesheet, and no configuration.
+A single document rendered outside a project matches against its file name.
+An entry that starts with `/` or ends in `.html` looks like a URL, so the filter shows a warning for it.
 
 With `separate-chapter-state` on, a return visit can offer to reopen the previous chapter even when the reader never scrolled in it.
 
@@ -72,7 +77,7 @@ The filter reads the project type from `QUARTO_EXECUTE_INFO` while rendering, an
 
 ```html
 <script id="quarto-remember-config" type="application/json">
-  {"page-exclude":[],"project-type":"book","separate-chapter-state":false}
+  {"project-type":"book","separate-chapter-state":false}
 </script>
 ```
 
