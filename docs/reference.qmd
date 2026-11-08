@@ -77,6 +77,8 @@ About a second after the page loads, a polite live region says once where the ba
 <kbd>Esc</kbd> inside the banner counts as Dismiss, and keys pressed in the banner do not reach Reveal.js.
 When the banner closes while it holds focus, focus moves to the first visible heading, or to the current slide, so it is not lost.
 A reader who scrolls past the banner without answering has chosen to read on, so the banner leaves the page and the view stays where it is.
+If the banner holds keyboard focus, it stays until focus leaves it.
+On a Reveal.js deck, moving to another slide counts as reading on in the same way.
 
 In a book the prompt offers the chapter that was being read, and accepting it navigates there.
 

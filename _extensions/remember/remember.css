@@ -46,12 +46,12 @@
 .remember-banner-fixed {
   position: fixed;
   inset-block-end: var(--remember-offset, 1rem);
-  inset-inline-start: 50%;
-  transform: translateX(-50%);
+  inset-inline: 0;
   z-index: 40;
+  margin-inline: auto;
   width: max-content;
   max-width: min(36rem, calc(100% - 12rem));
-  margin: 0;
+  margin-block: 0;
   font-size: 1rem;
   box-shadow: var(--bs-box-shadow, 0 0.5rem 1rem rgb(0 0 0 / 15%));
 }

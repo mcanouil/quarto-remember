@@ -457,11 +457,27 @@
     document.body.appendChild(status);
 
     const timers = [];
+    // Removing an in-flow banner above the view would pull the content up,
+    // so the view is moved by the same amount, at once.
     const close = () => {
       const hadFocus = banner.contains(document.activeElement);
       timers.forEach(clearTimeout);
+      const anchor = banner.classList.contains('remember-banner-fixed') ? null : banner.nextElementSibling;
+      const before = anchor ? anchor.getBoundingClientRect().top : 0;
+      const above = banner.getBoundingClientRect().top < 0;
       banner.remove();
       status.remove();
+      document.removeEventListener('focusin', onFocusIn);
+      if (typeof Reveal !== 'undefined' && typeof Reveal.off === 'function') {
+        Reveal.off('slidechanged', onSlideChanged);
+      }
+      if (anchor && above) {
+        // Scroll anchoring and margin collapse settle by the next frame, so
+        // the remaining gap is measured and closed then.
+        requestAnimationFrame(() => {
+          window.scrollBy({ top: anchor.getBoundingClientRect().top - before, left: 0, behavior: 'instant' });
+        });
+      }
       return hadFocus;
     };
 
@@ -479,7 +495,8 @@
       const hadFocus = close();
       onDecline();
       if (hadFocus) {
-        focusWithoutScroll(focusTarget());
+        // Wait for the view correction in `close` before choosing a heading.
+        requestAnimationFrame(() => requestAnimationFrame(() => focusWithoutScroll(focusTarget())));
       }
     };
     declineBtn.onclick = decline;
@@ -501,22 +518,52 @@
 
     // A fixed banner must not hide the element that has keyboard focus. When
     // focus lands behind it, the banner moves to the other edge of the screen.
+    // Containers such as the page or a slide are not what the reader is
+    // looking at, so only a control smaller than half the screen counts.
     const onFocusIn = (e) => {
       if (!banner.isConnected) {
         document.removeEventListener('focusin', onFocusIn);
         return;
       }
-      if (banner.contains(e.target)) {
+      const target = e.target;
+      if (!(target instanceof Element) || banner.contains(target) ||
+          target === document.body || target === document.documentElement) {
         return;
       }
-      const overlaps = (r, b) => r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top;
-      const target = e.target.getBoundingClientRect();
-      if (overlaps(target, banner.getBoundingClientRect())) {
-        banner.classList.toggle('remember-banner-top');
+      const rect = target.getBoundingClientRect();
+      if (rect.height === 0 || rect.height > window.innerHeight / 2) {
+        return;
+      }
+      const inBottomHalf = rect.top + rect.height / 2 > window.innerHeight / 2;
+      banner.classList.toggle('remember-banner-top', inBottomHalf);
+    };
+
+    // Moving to another slide is the deck's way of reading on, as scrolling
+    // past the banner is on a page. Reveal.js also changes slide by itself
+    // while it starts, for example in its scroll view on a narrow screen, so
+    // only a change after the reader has acted counts.
+    let readerActed = false;
+    const markActed = () => {
+      readerActed = true;
+    };
+    ['keydown', 'pointerdown', 'wheel', 'touchstart'].forEach((type) => {
+      document.addEventListener(type, markActed, { capture: true, once: true, passive: true });
+    });
+    const onSlideChanged = () => {
+      if (!readerActed) {
+        return;
+      }
+      const hadFocus = close();
+      if (hadFocus) {
+        focusWithoutScroll(focusTarget());
       }
     };
+
     if (banner.classList.contains('remember-banner-fixed')) {
       document.addEventListener('focusin', onFocusIn);
+      if (typeof Reveal !== 'undefined' && typeof Reveal.on === 'function') {
+        Reveal.on('slidechanged', onSlideChanged);
+      }
     }
 
     // A reader who scrolls past the banner has chosen to read on. The banner
@@ -530,11 +577,7 @@
       let scrolledPast = false;
       const leave = () => {
         observer.disconnect();
-        const anchor = banner.nextElementSibling;
-        const before = anchor ? anchor.getBoundingClientRect().top : 0;
         close();
-        const after = anchor ? anchor.getBoundingClientRect().top : 0;
-        window.scrollBy({ top: after - before, left: 0, behavior: 'instant' });
       };
       const observer = new IntersectionObserver((entries) => {
         const entry = entries[0];
