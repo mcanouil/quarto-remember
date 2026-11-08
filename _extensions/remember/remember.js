@@ -31,19 +31,17 @@
    * Shape:
    *   {
    *     "project-type": "book" | "website" | "default",
-   *     "page-exclude": string[],
    *     "separate-chapter-state": boolean
    *   }
    *
    * If the element is missing or malformed, the defaults below preserve the
    * previous "single document" behaviour.
    *
-   * @returns {{projectType: string, pageExclude: string[], separateChapterState: boolean}}
+   * @returns {{projectType: string, separateChapterState: boolean}}
    */
   function readConfig() {
     const fallback = {
       projectType: 'default',
-      pageExclude: [],
       separateChapterState: false
     };
     const element = document.getElementById(CONFIG_ELEMENT_ID);
@@ -54,7 +52,6 @@
       const raw = JSON.parse(element.textContent || '{}');
       return {
         projectType: typeof raw['project-type'] === 'string' ? raw['project-type'] : fallback.projectType,
-        pageExclude: Array.isArray(raw['page-exclude']) ? raw['page-exclude'] : fallback.pageExclude,
         separateChapterState: raw['separate-chapter-state'] === true
       };
     } catch (e) {
@@ -144,34 +141,6 @@
         refresh();
         return result;
       };
-    });
-  }
-
-  /**
-   * Test the current pathname against the user-configured exclusion list.
-   * Each entry is matched either literally (substring) or as a glob with
-   * `*` standing for one path segment.
-   *
-   * @returns {boolean}
-   */
-  function isExcludedPage() {
-    if (!CONFIG.pageExclude.length) {
-      return false;
-    }
-    const pathname = window.location.pathname;
-    return CONFIG.pageExclude.some((pattern) => {
-      if (typeof pattern !== 'string' || pattern === '') {
-        return false;
-      }
-      if (pattern.indexOf('*') === -1) {
-        return pathname.indexOf(pattern) !== -1;
-      }
-      const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*');
-      try {
-        return new RegExp('^' + escaped + '$').test(pathname);
-      } catch (e) {
-        return false;
-      }
     });
   }
 
@@ -643,9 +612,6 @@
   function init() {
     if (!LOCAL_STORAGE_OK) {
       console.warn('Remember: localStorage is unavailable; navigation persistence is disabled for this session.');
-      return;
-    }
-    if (isExcludedPage()) {
       return;
     }
     watchPageIdentifier();

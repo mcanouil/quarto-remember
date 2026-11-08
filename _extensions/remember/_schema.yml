@@ -11,10 +11,11 @@ options:
       type: string
     default: []
     description: |
-      List of pathname patterns to opt out of navigation persistence.
-      Each entry is matched against `window.location.pathname` either as a
-      literal substring or as a glob with `*` standing for one path segment
-      (for example `/drafts/*`).
+      Source files to keep out of navigation persistence, as paths relative
+      to the project root (for example `index.qmd` or `drafts/*.qmd`).
+      Each entry must match the whole path. A `*` matches any text inside one
+      path segment. An excluded page gets no remember script, stylesheet, or
+      configuration.
   separate-chapter-state:
     type: boolean
     default: false

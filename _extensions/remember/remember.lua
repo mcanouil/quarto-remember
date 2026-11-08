@@ -92,6 +92,44 @@ local function as_string_list(value)
   return result
 end
 
+--- Return the path of the source file, relative to the project root, with
+--- `/` separators. A single document rendered outside a project has no root,
+--- so its base name stands in for the relative path.
+--- @return string The project-relative source path
+local function source_path()
+  local input = (quarto.doc.input_file or ''):gsub('\\', '/')
+  local root = quarto.project.directory
+  if root == nil or root == '' then
+    return (input:match('[^/]+$') or input)
+  end
+  root = root:gsub('\\', '/'):gsub('/+$', '') .. '/'
+  if input:sub(1, #root) == root then
+    return input:sub(#root + 1)
+  end
+  return (input:match('[^/]+$') or input)
+end
+
+--- Turn a `page-exclude` pattern into an anchored Lua pattern. Every
+--- character is literal except `*`, which matches within one path segment.
+--- @param pattern string A project-relative path, optionally with `*`
+--- @return string The anchored Lua pattern
+local function to_lua_pattern(pattern)
+  local escaped = pattern:gsub('^%./', ''):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0')
+  return '^' .. escaped:gsub('%*', '[^/]*') .. '$'
+end
+
+--- Report whether the source file matches one of the `page-exclude` patterns.
+--- @param patterns table<integer, string> Project-relative source paths
+--- @return boolean True when the page must carry no remember code
+local function is_excluded(patterns)
+  if #patterns == 0 then return false end
+  local path = source_path()
+  for _, pattern in ipairs(patterns) do
+    if path:match(to_lua_pattern(pattern)) then return true end
+  end
+  return false
+end
+
 --- Encode a Lua value as a JSON literal suitable for inlining in a
 --- `<script>` block. The result never contains the substring `</`, so
 --- it cannot prematurely terminate the script element.
@@ -104,17 +142,15 @@ local function encode_for_script(value)
 end
 
 --- Build the bootstrap `<script>` that hands the resolved options to the
---- client. The payload is intentionally minimal: project type, the
---- page-exclusion list, and the separate-chapter-state flag.
+--- client. The payload is intentionally minimal: project type and the
+--- separate-chapter-state flag.
 --- @param project_type string One of `"book"`, `"website"`, or `"default"`
---- @param page_exclude table<integer, string> Paths/patterns to skip
 --- @param separate_chapter_state boolean Whether to store chapter and
 ---   scroll position under independent keys
 --- @return string Raw HTML containing the bootstrap script
-local function build_bootstrap_script(project_type, page_exclude, separate_chapter_state)
+local function build_bootstrap_script(project_type, separate_chapter_state)
   local payload = {
     ['project-type'] = project_type,
-    ['page-exclude'] = page_exclude,
     ['separate-chapter-state'] = separate_chapter_state,
   }
   return string.format(
@@ -137,6 +173,12 @@ local function inject_dependencies(meta)
 
   checker:options(meta)
 
+  -- An excluded page gets no script, no stylesheet and no configuration, so
+  -- it carries no remember code at all.
+  if is_excluded(as_string_list(checker:option('page-exclude'))) then
+    return meta
+  end
+
   html_mod.ensure_html_dependency({
     name = EXTENSION_NAME,
     version = '1.0.0',
@@ -145,12 +187,11 @@ local function inject_dependencies(meta)
   })
 
   local project_type = resolve_project_type()
-  -- The schema decides both values, so `separate-chapter-state: no` turns the
+  -- The schema decides the value, so `separate-chapter-state: no` turns the
   -- feature off. Reading the document itself left it on.
-  local page_exclude = as_string_list(checker:option('page-exclude'))
   local separate_chapter_state = checker:option('separate-chapter-state') == true
 
-  local script = build_bootstrap_script(project_type, page_exclude, separate_chapter_state)
+  local script = build_bootstrap_script(project_type, separate_chapter_state)
   quarto.doc.include_text('in-header', script)
 
   return meta

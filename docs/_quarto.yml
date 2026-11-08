@@ -131,7 +131,9 @@ extensions:
     auto-filename: false
   remember:
     # The site runs the extension on itself, so scrolling a page and coming
-    # back offers to resume. The changelog is excluded to demonstrate
-    # page-exclude, and because nobody resumes a changelog.
+    # back offers to resume. The home page, the 404 page and the changelog are
+    # excluded to demonstrate page-exclude, and because nobody resumes them.
     page-exclude:
-      - /changelog.html
+      - index.qmd
+      - 404.qmd
+      - changelog.qmd

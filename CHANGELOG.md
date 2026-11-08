@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+- feat: Match `page-exclude` against the source file, relative to the project, rather than the page URL.
+  Write `about.qmd` or `drafts/*.qmd` where you wrote `/about.html` or `/drafts/*`.
+  An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#PR)
+
 ### Refactoring
 
 - build: Update the vendored Lua modules to 2.7.0 and add `metadata.lua`, so the project type comes from the shared `get_project_metadata` helper. The warnings stay the same for any file that Quarto writes. (#31)
