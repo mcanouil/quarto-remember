@@ -1,13 +1,17 @@
 /**
- * Remember Extension - Modal Prompt Styles
- * Styles for the navigation resume prompt
+ * Remember Extension - Resume Banner Styles
+ * Styles for the banner that offers to resume reading
  *
  * @author Mickaël Canouil
+ *
+ * The banner sits in the page flow and does not cover the page. On a
+ * Reveal.js deck it is fixed at the bottom centre, clear of the menu button
+ * in the bottom left corner and of the controls in the bottom right corner.
  *
  * Every colour, the radius, and the font come from the page theme: the
  * Bootstrap 5 custom properties on an HTML page, the Reveal.js theme
  * properties on a slide deck, and the system colours elsewhere. The theme
- * variables change with the colour scheme, so the prompt follows the scheme
+ * variables change with the colour scheme, so the banner follows the scheme
  * that the page shows, not the scheme of the operating system.
  *
  * The buttons also carry the Bootstrap `btn` classes. The button rules below
@@ -15,53 +19,59 @@
  * rules win on a Bootstrap page and these rules apply only where it is absent.
  */
 
-.remember-overlay {
+.remember-banner {
   --remember-bg: var(--bs-body-bg, var(--r-background-color, Canvas));
   --remember-fg: var(--bs-body-color, var(--r-main-color, CanvasText));
+  --remember-accent: var(--bs-primary, var(--r-link-color, LinkText));
 
-  position: fixed;
-  inset: 0;
-  background-color: rgb(0 0 0 / 50%);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  z-index: 10000;
-  animation: remember-fade-in 0.2s ease-out;
-}
-
-.remember-modal {
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0.75rem 1rem;
   background: var(--remember-bg);
   color: var(--remember-fg);
   font-family: var(--bs-body-font-family, var(--r-main-font, inherit));
-  border: var(--bs-border-width, 1px) solid var(--bs-border-color-translucent, rgb(0 0 0 / 17.5%));
-  border-radius: var(--bs-border-radius-lg, 0.5rem);
-  padding: 2rem;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: var(--bs-box-shadow-lg, 0 1rem 3rem rgb(0 0 0 / 17.5%));
-  animation: remember-slide-up 0.3s ease-out;
-  will-change: transform, opacity;
+  font-size: 1rem;
+  border: var(--bs-border-width, 1px) solid var(--bs-border-color, currentColor);
+  border-inline-start: 0.25rem solid var(--remember-accent);
+  border-radius: var(--bs-border-radius, 0.375rem);
+  animation: remember-fade-in 0.2s ease-out;
 }
 
-.remember-title {
-  margin: 0 0 1rem;
-  font-family: var(--bs-headings-font-family, var(--r-heading-font, inherit));
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: inherit;
+.remember-banner-fixed {
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: max-content;
+  max-width: min(36rem, calc(100% - 12rem));
+  margin: 0;
+  font-size: 1rem;
+  box-shadow: var(--bs-box-shadow, 0 0.5rem 1rem rgb(0 0 0 / 15%));
 }
 
 .remember-message {
-  margin: 0 0 1.5rem;
-  font-size: 1rem;
+  flex: 1 1 18rem;
+  margin: 0;
   line-height: 1.5;
-  color: inherit;
 }
 
 .remember-buttons {
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.remember-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* Keep the targets large enough to tap, whichever rules style the buttons. */
@@ -71,7 +81,7 @@
 }
 
 :where(.remember-btn) {
-  padding: 0.75rem 1.5rem;
+  padding: 0.375rem 1rem;
   border: 1px solid transparent;
   border-radius: var(--bs-border-radius, 0.375rem);
   font: inherit;
@@ -81,7 +91,7 @@
 }
 
 :where(.remember-btn-accept) {
-  background-color: var(--r-link-color, LinkText);
+  background-color: var(--remember-accent);
   color: var(--remember-bg);
 }
 
@@ -93,7 +103,7 @@
 
 @media (hover: hover) {
   :where(.remember-btn-accept:hover) {
-    background-color: color-mix(in srgb, var(--r-link-color, LinkText) 85%, black);
+    background-color: color-mix(in srgb, var(--remember-accent) 85%, black);
   }
 
   :where(.remember-btn-decline:hover) {
@@ -120,21 +130,8 @@
   }
 }
 
-@keyframes remember-slide-up {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .remember-overlay,
-  .remember-modal {
+  .remember-banner {
     animation: none;
   }
 
@@ -144,31 +141,22 @@
 }
 
 @media (max-width: 600px) {
-  .remember-modal {
-    padding: 1.5rem;
-    width: 95%;
-  }
-
-  .remember-title {
-    font-size: 1.25rem;
-  }
-
-  .remember-message {
-    font-size: 0.95rem;
+  .remember-banner-fixed {
+    inset-block-end: 4rem;
+    max-width: calc(100% - 2rem);
   }
 
   .remember-buttons {
-    flex-direction: column;
-    gap: 0.75rem;
+    width: 100%;
   }
 
   .remember-btn {
-    width: 100%;
+    flex: 1;
   }
 }
 
 @media (prefers-contrast: more) {
-  .remember-modal {
+  .remember-banner {
     border: 2px solid currentColor;
   }
 
@@ -183,7 +171,7 @@
 }
 
 @media (forced-colors: active) {
-  .remember-modal {
+  .remember-banner {
     border: 2px solid CanvasText;
   }
 

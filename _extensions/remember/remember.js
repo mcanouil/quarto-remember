@@ -283,105 +283,147 @@
   }
 
   /**
-   * Render a modal dialog asking the user whether to resume.
+   * Place the banner where a reader meets it after the page title: after the
+   * title block, else at the start of `main`, else at the start of `body`.
+   * On a Reveal.js deck it is appended to `body` and fixed by the stylesheet.
+   *
+   * @param {HTMLElement} banner
+   */
+  function placeBanner(banner) {
+    if (document.querySelector('.reveal')) {
+      banner.classList.add('remember-banner-fixed');
+      document.body.appendChild(banner);
+      return;
+    }
+    const titleBlock = document.getElementById('title-block-header');
+    if (titleBlock && titleBlock.parentNode) {
+      titleBlock.parentNode.insertBefore(banner, titleBlock.nextSibling);
+      return;
+    }
+    const main = document.querySelector('main');
+    const container = main || document.body;
+    container.insertBefore(banner, container.firstChild);
+  }
+
+  /**
+   * Move focus to an element that does not take focus by itself, without
+   * scrolling, so focus is not lost to `body` when the banner goes away.
+   *
+   * @param {HTMLElement|null} element
+   */
+  function focusWithoutScroll(element) {
+    if (!element) {
+      return;
+    }
+    if (!element.hasAttribute('tabindex')) {
+      element.setAttribute('tabindex', '-1');
+      element.addEventListener('blur', () => element.removeAttribute('tabindex'), { once: true });
+    }
+    element.focus({ preventScroll: true });
+  }
+
+  /**
+   * Return the first heading of the page content whose top is in view, or
+   * the page title when none is.
+   *
+   * @returns {HTMLElement|null}
+   */
+  function headingInView() {
+    const root = document.querySelector('main') || document.body;
+    const headings = root.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    for (const heading of headings) {
+      if (heading.getBoundingClientRect().top >= 0) {
+        return heading;
+      }
+    }
+    return document.querySelector('h1');
+  }
+
+  /**
+   * Show a banner that offers to resume, without interrupting the reader.
+   * The banner does not move or trap focus and does not cover the page. A
+   * polite live region announces it once.
    *
    * @param {string} message
    * @param {Function} onAccept
    * @param {Function} onDecline
    */
-  function showPrompt(message, onAccept, onDecline) {
+  function showBanner(message, onAccept, onDecline) {
     if (wasPromptRecentlyShown()) {
       return;
     }
     markPromptShown();
 
-    const previouslyFocused = document.activeElement;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'remember-overlay';
-    overlay.setAttribute('role', 'alertdialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-labelledby', 'remember-prompt-title');
-    overlay.setAttribute('aria-describedby', 'remember-prompt-message');
-
-    const modal = document.createElement('div');
-    modal.className = 'remember-modal';
-
-    const title = document.createElement('h3');
-    title.id = 'remember-prompt-title';
-    title.textContent = 'Resume Navigation?';
-    title.className = 'remember-title';
+    const banner = document.createElement('section');
+    banner.className = 'remember-banner';
+    banner.setAttribute('role', 'region');
+    banner.setAttribute('aria-label', 'Resume reading');
 
     const text = document.createElement('p');
-    text.id = 'remember-prompt-message';
-    text.textContent = message;
     text.className = 'remember-message';
+    text.textContent = message;
 
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'remember-buttons';
-
-    const cleanup = () => {
-      if (overlay.parentNode) {
-        document.body.removeChild(overlay);
-      }
-      document.removeEventListener('keydown', handleKeydown);
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
-        previouslyFocused.focus();
-      }
-    };
-
-    const declineBtn = document.createElement('button');
-    declineBtn.type = 'button';
-    declineBtn.textContent = 'No';
-    declineBtn.className = 'remember-btn remember-btn-decline btn btn-outline-secondary';
-    declineBtn.setAttribute('aria-label', 'No, start from the beginning');
-    declineBtn.onclick = () => {
-      cleanup();
-      onDecline();
-    };
+    const buttons = document.createElement('div');
+    buttons.className = 'remember-buttons';
 
     const acceptBtn = document.createElement('button');
     acceptBtn.type = 'button';
-    acceptBtn.textContent = 'Yes';
+    acceptBtn.textContent = 'Resume';
     acceptBtn.className = 'remember-btn remember-btn-accept btn btn-primary';
-    acceptBtn.setAttribute('aria-label', 'Yes, resume where I left off');
+
+    const declineBtn = document.createElement('button');
+    declineBtn.type = 'button';
+    declineBtn.textContent = 'Dismiss';
+    declineBtn.className = 'remember-btn remember-btn-decline btn btn-outline-secondary';
+
+    const status = document.createElement('div');
+    status.className = 'remember-status';
+    status.setAttribute('role', 'status');
+
+    const close = () => {
+      const hadFocus = banner.contains(document.activeElement);
+      banner.remove();
+      status.remove();
+      return hadFocus;
+    };
+
     acceptBtn.onclick = () => {
-      cleanup();
+      const hadFocus = close();
       onAccept();
+      if (hadFocus) {
+        requestAnimationFrame(() => focusWithoutScroll(headingInView()));
+      }
     };
 
-    const focusableElements = () => [declineBtn, acceptBtn];
+    const decline = () => {
+      const hadFocus = close();
+      onDecline();
+      if (hadFocus) {
+        focusWithoutScroll(headingInView());
+      }
+    };
+    declineBtn.onclick = decline;
 
-    const handleKeydown = (e) => {
+    banner.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        cleanup();
-        onDecline();
-        return;
+        // Keep the key from also reaching Reveal.js, which opens its overview.
+        e.stopPropagation();
+        decline();
       }
-      if (e.key === 'Tab') {
-        const elements = focusableElements();
-        const firstElement = elements[0];
-        const lastElement = elements[elements.length - 1];
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
-    };
+    });
 
-    buttonContainer.appendChild(declineBtn);
-    buttonContainer.appendChild(acceptBtn);
-    modal.appendChild(title);
-    modal.appendChild(text);
-    modal.appendChild(buttonContainer);
-    overlay.appendChild(modal);
+    buttons.appendChild(acceptBtn);
+    buttons.appendChild(declineBtn);
+    banner.appendChild(text);
+    banner.appendChild(buttons);
+    placeBanner(banner);
+    document.body.appendChild(status);
 
-    document.body.appendChild(overlay);
-    declineBtn.focus();
-    document.addEventListener('keydown', handleKeydown);
+    // A live region announces only content that changes after it is in the
+    // page, so the message is set on the next frame.
+    requestAnimationFrame(() => {
+      status.textContent = message + ' The option to resume is in the "Resume reading" region.';
+    });
   }
 
   /**
@@ -473,7 +515,7 @@
 
       if (stored && stored.slideIndices) {
         const message = `You left this presentation ${formatTimestamp(stored.timestamp)}. Would you like to resume where you left off?`;
-        showPrompt(message,
+        showBanner(message,
           () => Reveal.slide(stored.slideIndices.h, stored.slideIndices.v, stored.slideIndices.f),
           () => clearStoredPosition()
         );
@@ -536,7 +578,7 @@
       const currentPath = window.location.pathname;
       if (chapter.url && chapter.url !== currentPath) {
         const message = `You were reading a different chapter ${formatTimestamp(stored ? stored.timestamp : Date.now())}. Would you like to return to where you were?`;
-        showPrompt(message,
+        showBanner(message,
           () => {
             markSessionActive();
             window.location.href = chapter.url + (chapter.hash || '');
@@ -572,7 +614,7 @@
           ? `You were reading a different chapter ${formatTimestamp(stored.timestamp)}. Would you like to return to where you were?`
           : `You visited this page ${formatTimestamp(stored.timestamp)}. Would you like to return to where you were?`;
 
-        showPrompt(message,
+        showBanner(message,
           () => {
             window.removeEventListener('beforeunload', handleNavigation);
             markSessionActive();

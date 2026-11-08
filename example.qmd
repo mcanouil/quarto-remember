@@ -34,7 +34,7 @@ filters:
   - remember
 ```
 
-Scroll this page, leave it, and come back: a prompt offers to put you where you were, and says how long ago that was.
+Scroll this page, leave it, and come back: a banner below the title offers to put you where you were, and says how long ago that was.
 Declining clears the stored position rather than asking again.
 
 Opt pages out when they are not worth resuming:
