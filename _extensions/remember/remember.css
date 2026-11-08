@@ -93,7 +93,7 @@
 }
 
 .remember-btn:focus-visible {
-  outline: 3px solid var(--bs-focus-ring-color, Highlight);
+  outline: 3px solid var(--bs-body-color, var(--r-main-color, Highlight));
   outline-offset: 2px;
 }
 
