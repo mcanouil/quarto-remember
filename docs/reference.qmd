@@ -72,9 +72,10 @@ On an HTML page it sits after the title block, in the flow of the page.
 On a Reveal.js deck it is fixed at the bottom centre of the screen, clear of the menu button and the controls.
 It does not cover the page, move focus, trap focus, or close on a timer.
 It is a region named "Resume reading", with a Resume button and a Dismiss button.
-A polite live region announces it once, so a screen reader user hears that it is there.
-<kbd>Esc</kbd> inside the banner counts as Dismiss.
-When the banner closes while it holds focus, focus moves to the first heading in view, so it is not lost.
+About a second after the page loads, a polite live region says once where the banner is, so a screen reader user hears that it is there.
+<kbd>Esc</kbd> inside the banner counts as Dismiss, and keys pressed in the banner do not reach Reveal.js.
+When the banner closes while it holds focus, focus moves to the first visible heading, or to the current slide, so it is not lost.
+A reader who scrolls past the banner without answering has chosen to read on, so the banner leaves the page and the view stays where it is.
 
 In a book the prompt offers the chapter that was being read, and accepting it navigates there.
 

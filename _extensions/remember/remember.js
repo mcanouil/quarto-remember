@@ -284,25 +284,70 @@
 
   /**
    * Place the banner where a reader meets it after the page title: after the
-   * title block, else at the start of `main`, else at the start of `body`.
-   * On a Reveal.js deck it is appended to `body` and fixed by the stylesheet.
+   * title block when it is inside `main`, else at the start of `main`, else
+   * at the start of `body`. On a Reveal.js deck the banner is fixed by the
+   * stylesheet, above the slide footer when the deck has one.
    *
    * @param {HTMLElement} banner
+   * @returns {string} Where the banner is, for the announcement
    */
   function placeBanner(banner) {
     if (document.querySelector('.reveal')) {
       banner.classList.add('remember-banner-fixed');
+      const footer = document.querySelector('.reveal .footer');
+      if (footer && footer.offsetHeight > 0) {
+        const clearance = window.innerHeight - footer.getBoundingClientRect().top + 8;
+        banner.style.setProperty('--remember-offset', `${Math.ceil(clearance)}px`);
+      }
       document.body.appendChild(banner);
-      return;
-    }
-    const titleBlock = document.getElementById('title-block-header');
-    if (titleBlock && titleBlock.parentNode) {
-      titleBlock.parentNode.insertBefore(banner, titleBlock.nextSibling);
-      return;
+      return 'at the bottom of the screen';
     }
     const main = document.querySelector('main');
+    const titleBlock = document.getElementById('title-block-header');
+    if (main && titleBlock && main.contains(titleBlock)) {
+      titleBlock.parentNode.insertBefore(banner, titleBlock.nextSibling);
+      return 'below the page title';
+    }
     const container = main || document.body;
     container.insertBefore(banner, container.firstChild);
+    return 'at the start of the page content';
+  }
+
+  /**
+   * Report whether an element is rendered, in the viewport, and not hidden
+   * from assistive technology.
+   *
+   * @param {Element} element
+   * @returns {boolean}
+   */
+  function isVisible(element) {
+    if (element.closest('[hidden], [aria-hidden="true"]')) {
+      return false;
+    }
+    const rect = element.getBoundingClientRect();
+    return rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  /**
+   * Return the element that takes focus when the banner closes: the current
+   * slide on a Reveal.js deck, else the first visible heading of the page
+   * content, else `main`.
+   *
+   * @returns {HTMLElement|null}
+   */
+  function focusTarget() {
+    if (typeof Reveal !== 'undefined' && document.querySelector('.reveal')) {
+      const slide = Reveal.getCurrentSlide();
+      const heading = slide && slide.querySelector('h1, h2, h3, h4, h5, h6');
+      return heading && isVisible(heading) ? heading : slide;
+    }
+    const root = document.querySelector('main') || document.body;
+    for (const heading of root.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+      if (isVisible(heading)) {
+        return heading;
+      }
+    }
+    return root;
   }
 
   /**
@@ -323,20 +368,23 @@
   }
 
   /**
-   * Return the first heading of the page content whose top is in view, or
-   * the page title when none is.
+   * Run a callback once the page stops scrolling, or after a short wait when
+   * it does not scroll at all.
    *
-   * @returns {HTMLElement|null}
+   * @param {Function} callback
    */
-  function headingInView() {
-    const root = document.querySelector('main') || document.body;
-    const headings = root.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    for (const heading of headings) {
-      if (heading.getBoundingClientRect().top >= 0) {
-        return heading;
+  function afterScrollSettles(callback) {
+    let done = false;
+    const finish = () => {
+      if (done) {
+        return;
       }
-    }
-    return document.querySelector('h1');
+      done = true;
+      window.removeEventListener('scrollend', finish);
+      callback();
+    };
+    window.addEventListener('scrollend', finish, { once: true });
+    setTimeout(finish, 1500);
   }
 
   /**
@@ -356,7 +404,6 @@
 
     const banner = document.createElement('section');
     banner.className = 'remember-banner';
-    banner.setAttribute('role', 'region');
     banner.setAttribute('aria-label', 'Resume reading');
 
     const text = document.createElement('p');
@@ -379,9 +426,12 @@
     const status = document.createElement('div');
     status.className = 'remember-status';
     status.setAttribute('role', 'status');
+    document.body.appendChild(status);
 
+    const timers = [];
     const close = () => {
       const hadFocus = banner.contains(document.activeElement);
+      timers.forEach(clearTimeout);
       banner.remove();
       status.remove();
       return hadFocus;
@@ -391,7 +441,9 @@
       const hadFocus = close();
       onAccept();
       if (hadFocus) {
-        requestAnimationFrame(() => focusWithoutScroll(headingInView()));
+        // A deck changes slide at once; a page may still be scrolling.
+        const settle = document.querySelector('.reveal') ? requestAnimationFrame : afterScrollSettles;
+        settle(() => focusWithoutScroll(focusTarget()));
       }
     };
 
@@ -399,15 +451,16 @@
       const hadFocus = close();
       onDecline();
       if (hadFocus) {
-        focusWithoutScroll(headingInView());
+        focusWithoutScroll(focusTarget());
       }
     };
     declineBtn.onclick = decline;
 
+    // Keys pressed inside the banner belong to the banner: Reveal.js would
+    // otherwise turn Space into the next slide and Escape into its overview.
     banner.addEventListener('keydown', (e) => {
+      e.stopPropagation();
       if (e.key === 'Escape') {
-        // Keep the key from also reaching Reveal.js, which opens its overview.
-        e.stopPropagation();
         decline();
       }
     });
@@ -416,14 +469,37 @@
     buttons.appendChild(declineBtn);
     banner.appendChild(text);
     banner.appendChild(buttons);
-    placeBanner(banner);
-    document.body.appendChild(status);
+    const where = placeBanner(banner);
 
-    // A live region announces only content that changes after it is in the
-    // page, so the message is set on the next frame.
-    requestAnimationFrame(() => {
-      status.textContent = message + ' The option to resume is in the "Resume reading" region.';
-    });
+    // A reader who scrolls past the banner has chosen to read on. The banner
+    // then leaves the page, with the view held still, so later saved
+    // positions do not include its height.
+    if (!banner.classList.contains('remember-banner-fixed') && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting || entry.boundingClientRect.top >= 0 || !banner.isConnected) {
+          return;
+        }
+        observer.disconnect();
+        const anchor = banner.nextElementSibling;
+        const before = anchor ? anchor.getBoundingClientRect().top : 0;
+        close();
+        const after = anchor ? anchor.getBoundingClientRect().top : 0;
+        window.scrollBy(0, after - before);
+      });
+      observer.observe(banner);
+    }
+
+    // Screen readers miss a live region that changes as soon as it enters
+    // the page, and the page load reading can drown a polite message, so the
+    // short announcement waits a second. It is cleared after ten seconds, so
+    // a reader who browses the page does not meet it twice.
+    timers.push(setTimeout(() => {
+      status.textContent = `Resume reading is available ${where}.`;
+    }, 1000));
+    timers.push(setTimeout(() => {
+      status.textContent = '';
+    }, 11000));
   }
 
   /**
@@ -514,7 +590,7 @@
       const stored = getStoredPosition();
 
       if (stored && stored.slideIndices) {
-        const message = `You left this presentation ${formatTimestamp(stored.timestamp)}. Would you like to resume where you left off?`;
+        const message = `You left this presentation ${formatTimestamp(stored.timestamp)}. You can resume where you left off.`;
         showBanner(message,
           () => Reveal.slide(stored.slideIndices.h, stored.slideIndices.v, stored.slideIndices.f),
           () => clearStoredPosition()
@@ -577,7 +653,7 @@
     if (inBook && CONFIG.separateChapterState && chapter && !sessionActive) {
       const currentPath = window.location.pathname;
       if (chapter.url && chapter.url !== currentPath) {
-        const message = `You were reading a different chapter ${formatTimestamp(stored ? stored.timestamp : Date.now())}. Would you like to return to where you were?`;
+        const message = `You were reading a different chapter ${formatTimestamp(stored ? stored.timestamp : Date.now())}. You can return to where you were.`;
         showBanner(message,
           () => {
             markSessionActive();
@@ -611,8 +687,8 @@
 
       if (shouldShowPrompt) {
         const message = isDifferentPage
-          ? `You were reading a different chapter ${formatTimestamp(stored.timestamp)}. Would you like to return to where you were?`
-          : `You visited this page ${formatTimestamp(stored.timestamp)}. Would you like to return to where you were?`;
+          ? `You were reading a different chapter ${formatTimestamp(stored.timestamp)}. You can return to where you were.`
+          : `You visited this page ${formatTimestamp(stored.timestamp)}. You can return to where you were.`;
 
         showBanner(message,
           () => {

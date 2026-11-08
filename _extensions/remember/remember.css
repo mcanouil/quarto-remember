@@ -5,8 +5,9 @@
  * @author Mickaël Canouil
  *
  * The banner sits in the page flow and does not cover the page. On a
- * Reveal.js deck it is fixed at the bottom centre, clear of the menu button
- * in the bottom left corner and of the controls in the bottom right corner.
+ * Reveal.js deck it is fixed at the bottom centre, above the slide footer,
+ * clear of the menu button in the bottom left corner and of the controls in
+ * the bottom right corner.
  *
  * Every colour, the radius, and the font come from the page theme: the
  * Bootstrap 5 custom properties on an HTML page, the Reveal.js theme
@@ -43,7 +44,7 @@
 
 .remember-banner-fixed {
   position: fixed;
-  inset-block-end: 1rem;
+  inset-block-end: var(--remember-offset, 1rem);
   inset-inline-start: 50%;
   transform: translateX(-50%);
   z-index: 40;
@@ -142,7 +143,7 @@
 
 @media (max-width: 600px) {
   .remember-banner-fixed {
-    inset-block-end: 4rem;
+    inset-block-end: calc(var(--remember-offset, 1rem) + 3rem);
     max-width: calc(100% - 2rem);
   }
 

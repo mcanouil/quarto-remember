@@ -8,10 +8,8 @@
   Write `about.qmd` or `drafts/*.qmd` where you wrote `/about.html` or `/drafts/*`.
   An entry that still looks like a URL gets a warning.
   An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#33)
-- feat: Offer to resume in a banner below the page title instead of a modal dialogue.
-  The banner doesn't cover the page, move focus or trap focus, and a polite live region announces it to screen reader users.
-  On a Reveal.js deck it sits at the bottom of the screen.
-  The `.remember-overlay` and `.remember-modal` classes are gone; style `.remember-banner` instead. (#PR)
+- feat: Offer to resume in a banner below the page title, which doesn't cover the page or take focus, instead of a modal dialogue.
+  Style `.remember-banner` where you styled `.remember-overlay` or `.remember-modal`. (#PR)
 
 ### New Features
 
