@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.0.0 (2026-11-08)
+
 ### Breaking Changes
 
 - feat: Match `page-exclude` against the source file, relative to the project, rather than the page URL.
