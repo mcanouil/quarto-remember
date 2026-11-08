@@ -7,13 +7,13 @@
 - feat: Match `page-exclude` against the source file, relative to the project, rather than the page URL.
   Write `about.qmd` or `drafts/*.qmd` where you wrote `/about.html` or `/drafts/*`.
   An entry that still looks like a URL gets a warning.
-  An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#PR)
+  An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#33)
 
 ### New Features
 
 - feat: Take the prompt colours, font and radius from the page theme, and give its buttons the Bootstrap button classes.
   The prompt now matches the site, and follows the colour scheme the page shows rather than the one the system prefers.
-  On a Reveal.js deck it takes the deck theme colours and font. (#PR)
+  On a Reveal.js deck it takes the deck theme colours and font. (#33)
 
 ### Refactoring
 
