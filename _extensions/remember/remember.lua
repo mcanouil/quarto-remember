@@ -116,10 +116,11 @@ end
 --- that it is relative to the page being rendered: on `guide/intro.qmd`, the
 --- entry `guide/intro.qmd` arrives as `../guide/intro.qmd`. Such a pattern is
 --- joined to the folder of the page and collapsed back to a project-relative
---- path. Any other pattern is already relative to the project.
+--- path. Any other pattern is already relative to the project. A pattern
+--- that climbs above the project root names no page, so it gets `nil`.
 --- @param pattern string The pattern as the filter receives it
 --- @param page string The project-relative path of the page
---- @return string The project-relative pattern
+--- @return string|nil The project-relative pattern
 local function project_relative(pattern, page)
   pattern = pattern:gsub('\\', '/')
   if pattern:sub(1, 3) ~= '../' then
@@ -131,6 +132,7 @@ local function project_relative(pattern, page)
   end
   for segment in pattern:gmatch('[^/]+') do
     if segment == '..' then
+      if #parts == 0 then return nil end
       parts[#parts] = nil
     elseif segment ~= '.' then
       parts[#parts + 1] = segment
@@ -168,7 +170,8 @@ local function is_excluded(patterns)
     return false
   end
   for _, pattern in ipairs(patterns) do
-    if path:match(to_lua_pattern(project_relative(pattern, path))) then return true end
+    local relative = project_relative(pattern, path)
+    if relative and path:match(to_lua_pattern(relative)) then return true end
   end
   return false
 end
