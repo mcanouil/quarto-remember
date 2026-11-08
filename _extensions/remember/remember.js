@@ -283,105 +283,335 @@
   }
 
   /**
-   * Render a modal dialog asking the user whether to resume.
+   * Place the banner where a reader meets it after the page title: after the
+   * title block when it is inside `main`, else at the start of `main`, else
+   * at the start of `body`. On a Reveal.js deck the banner is fixed by the
+   * stylesheet, above the slide footer when the deck has one.
+   *
+   * @param {HTMLElement} banner
+   * @returns {string} Where the banner is, for the announcement
+   */
+  function placeBanner(banner) {
+    if (document.querySelector('.reveal')) {
+      banner.classList.add('remember-banner-fixed');
+      const footer = document.querySelector('.reveal .footer');
+      if (footer && footer.offsetHeight > 0) {
+        const clearance = window.innerHeight - footer.getBoundingClientRect().top + 8;
+        banner.style.setProperty('--remember-offset', `${Math.ceil(clearance)}px`);
+      }
+      document.body.appendChild(banner);
+      return 'at the bottom of the screen';
+    }
+    const main = document.querySelector('main');
+    const titleBlock = document.getElementById('title-block-header');
+    if (main && titleBlock && main.contains(titleBlock)) {
+      titleBlock.parentNode.insertBefore(banner, titleBlock.nextSibling);
+      return 'below the page title';
+    }
+    const container = main || document.body;
+    container.insertBefore(banner, container.firstChild);
+    return 'at the start of the page content';
+  }
+
+  /**
+   * Return the scroll position as it would be without the banner. While the
+   * top of the view is inside an in-flow banner, the position is the top of
+   * the banner, because the banner is gone on the next visit. Past the
+   * banner, the space it takes is removed.
+   *
+   * @returns {number}
+   */
+  function scrollWithoutBanner() {
+    const banner = document.querySelector('.remember-banner:not(.remember-banner-fixed)');
+    if (!banner) {
+      return window.scrollY;
+    }
+    const rect = banner.getBoundingClientRect();
+    if (rect.top >= 0) {
+      return window.scrollY;
+    }
+    if (rect.bottom > 0 || !banner.nextElementSibling) {
+      return Math.max(0, Math.round(window.scrollY + rect.top));
+    }
+    // A focused banner stays in the page after the reader scrolls past it,
+    // so the space it takes is removed from the saved position.
+    const taken = banner.nextElementSibling.getBoundingClientRect().top - rect.top;
+    return Math.max(0, Math.round(window.scrollY - taken));
+  }
+
+  /**
+   * Report whether an element is rendered, in the viewport, and not hidden
+   * from assistive technology.
+   *
+   * @param {Element} element
+   * @returns {boolean}
+   */
+  function isVisible(element) {
+    if (element.closest('[hidden], [aria-hidden="true"]')) {
+      return false;
+    }
+    const rect = element.getBoundingClientRect();
+    return rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  /**
+   * Return the element that takes focus when the banner closes: the current
+   * slide on a Reveal.js deck, else the first visible heading of the page
+   * content, else `main`.
+   *
+   * @returns {HTMLElement|null}
+   */
+  function focusTarget() {
+    if (typeof Reveal !== 'undefined' && document.querySelector('.reveal')) {
+      const slide = Reveal.getCurrentSlide();
+      const heading = slide && slide.querySelector('h1, h2, h3, h4, h5, h6');
+      return heading && isVisible(heading) ? heading : slide;
+    }
+    const root = document.querySelector('main') || document.body;
+    for (const heading of root.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+      if (isVisible(heading)) {
+        return heading;
+      }
+    }
+    return root;
+  }
+
+  /**
+   * Move focus to an element that does not take focus by itself, without
+   * scrolling, so focus is not lost to `body` when the banner goes away.
+   * Focus the reader has already placed elsewhere is left alone.
+   *
+   * @param {HTMLElement|null} element
+   */
+  function focusWithoutScroll(element) {
+    const active = document.activeElement;
+    if (!element || (active && active !== document.body && active !== document.documentElement)) {
+      return;
+    }
+    if (!element.hasAttribute('tabindex')) {
+      element.setAttribute('tabindex', '-1');
+      element.addEventListener('blur', () => element.removeAttribute('tabindex'), { once: true });
+    }
+    element.focus({ preventScroll: true });
+  }
+
+  /**
+   * Run a callback once the page stops scrolling, or after a short wait when
+   * it does not scroll at all.
+   *
+   * @param {Function} callback
+   */
+  function afterScrollSettles(callback) {
+    let done = false;
+    const finish = () => {
+      if (done) {
+        return;
+      }
+      done = true;
+      window.removeEventListener('scrollend', finish);
+      callback();
+    };
+    window.addEventListener('scrollend', finish, { once: true });
+    setTimeout(finish, 1500);
+  }
+
+  /**
+   * Show a banner that offers to resume, without interrupting the reader.
+   * The banner does not move or trap focus and does not cover the page. A
+   * polite live region announces it once.
    *
    * @param {string} message
    * @param {Function} onAccept
    * @param {Function} onDecline
    */
-  function showPrompt(message, onAccept, onDecline) {
+  function showBanner(message, onAccept, onDecline) {
     if (wasPromptRecentlyShown()) {
       return;
     }
     markPromptShown();
 
-    const previouslyFocused = document.activeElement;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'remember-overlay';
-    overlay.setAttribute('role', 'alertdialog');
-    overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-labelledby', 'remember-prompt-title');
-    overlay.setAttribute('aria-describedby', 'remember-prompt-message');
-
-    const modal = document.createElement('div');
-    modal.className = 'remember-modal';
-
-    const title = document.createElement('h3');
-    title.id = 'remember-prompt-title';
-    title.textContent = 'Resume Navigation?';
-    title.className = 'remember-title';
+    const banner = document.createElement('section');
+    banner.className = 'remember-banner';
+    banner.setAttribute('aria-label', 'Resume reading');
 
     const text = document.createElement('p');
-    text.id = 'remember-prompt-message';
-    text.textContent = message;
     text.className = 'remember-message';
+    text.textContent = message;
 
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'remember-buttons';
-
-    const cleanup = () => {
-      if (overlay.parentNode) {
-        document.body.removeChild(overlay);
-      }
-      document.removeEventListener('keydown', handleKeydown);
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
-        previouslyFocused.focus();
-      }
-    };
-
-    const declineBtn = document.createElement('button');
-    declineBtn.type = 'button';
-    declineBtn.textContent = 'No';
-    declineBtn.className = 'remember-btn remember-btn-decline btn btn-outline-secondary';
-    declineBtn.setAttribute('aria-label', 'No, start from the beginning');
-    declineBtn.onclick = () => {
-      cleanup();
-      onDecline();
-    };
+    const buttons = document.createElement('div');
+    buttons.className = 'remember-buttons';
 
     const acceptBtn = document.createElement('button');
     acceptBtn.type = 'button';
-    acceptBtn.textContent = 'Yes';
+    acceptBtn.textContent = 'Resume';
     acceptBtn.className = 'remember-btn remember-btn-accept btn btn-primary';
-    acceptBtn.setAttribute('aria-label', 'Yes, resume where I left off');
-    acceptBtn.onclick = () => {
-      cleanup();
-      onAccept();
+
+    const declineBtn = document.createElement('button');
+    declineBtn.type = 'button';
+    declineBtn.textContent = 'Dismiss';
+    declineBtn.className = 'remember-btn remember-btn-decline btn btn-outline-secondary';
+
+    const status = document.createElement('div');
+    status.className = 'remember-status';
+    status.setAttribute('role', 'status');
+    document.body.appendChild(status);
+
+    const timers = [];
+    // Removing an in-flow banner above the view would pull the content up,
+    // so the view is moved by the same amount, at once.
+    const close = () => {
+      const hadFocus = banner.contains(document.activeElement);
+      timers.forEach(clearTimeout);
+      const anchor = banner.classList.contains('remember-banner-fixed') ? null : banner.nextElementSibling;
+      const before = anchor ? anchor.getBoundingClientRect().top : 0;
+      const above = banner.getBoundingClientRect().top < 0;
+      banner.remove();
+      status.remove();
+      document.removeEventListener('focusin', onFocusIn);
+      if (typeof Reveal !== 'undefined' && typeof Reveal.off === 'function') {
+        Reveal.off('slidechanged', onSlideChanged);
+      }
+      if (anchor && above) {
+        // Scroll anchoring and margin collapse settle by the next frame, so
+        // the remaining gap is measured and closed then.
+        requestAnimationFrame(() => {
+          window.scrollBy({ top: anchor.getBoundingClientRect().top - before, left: 0, behavior: 'instant' });
+        });
+      }
+      return hadFocus;
     };
 
-    const focusableElements = () => [declineBtn, acceptBtn];
+    acceptBtn.onclick = () => {
+      const hadFocus = close();
+      onAccept();
+      if (hadFocus) {
+        // A deck changes slide at once; a page may still be scrolling.
+        const settle = document.querySelector('.reveal') ? requestAnimationFrame : afterScrollSettles;
+        settle(() => focusWithoutScroll(focusTarget()));
+      }
+    };
 
-    const handleKeydown = (e) => {
+    const decline = () => {
+      const hadFocus = close();
+      onDecline();
+      if (hadFocus) {
+        // Wait for the view correction in `close` before choosing a heading.
+        requestAnimationFrame(() => requestAnimationFrame(() => focusWithoutScroll(focusTarget())));
+      }
+    };
+    declineBtn.onclick = decline;
+
+    // Keys pressed inside the banner belong to the banner: Reveal.js would
+    // otherwise turn Space into the next slide and Escape into its overview.
+    banner.addEventListener('keydown', (e) => {
+      e.stopPropagation();
       if (e.key === 'Escape') {
-        cleanup();
-        onDecline();
+        decline();
+      }
+    });
+
+    buttons.appendChild(acceptBtn);
+    buttons.appendChild(declineBtn);
+    banner.appendChild(text);
+    banner.appendChild(buttons);
+    const where = placeBanner(banner);
+
+    // A fixed banner must not hide the element that has keyboard focus. When
+    // focus lands behind it, the banner moves to the other edge of the screen.
+    // Containers such as the page or a slide are not what the reader is
+    // looking at, so only a control smaller than half the screen counts.
+    const onFocusIn = (e) => {
+      if (!banner.isConnected) {
+        document.removeEventListener('focusin', onFocusIn);
         return;
       }
-      if (e.key === 'Tab') {
-        const elements = focusableElements();
-        const firstElement = elements[0];
-        const lastElement = elements[elements.length - 1];
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
+      const target = e.target;
+      if (!(target instanceof Element) || banner.contains(target) ||
+          target === document.body || target === document.documentElement) {
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      if (rect.height === 0 || rect.height > window.innerHeight / 2) {
+        return;
+      }
+      const inBottomHalf = rect.top + rect.height / 2 > window.innerHeight / 2;
+      banner.classList.toggle('remember-banner-top', inBottomHalf);
+    };
+
+    // Moving to another slide is the deck's way of reading on, as scrolling
+    // past the banner is on a page. Reveal.js also changes slide by itself
+    // while it starts, for example in its scroll view on a narrow screen, so
+    // only a change after the reader has acted counts.
+    let readerActed = false;
+    const markActed = () => {
+      readerActed = true;
+    };
+    ['keydown', 'pointerdown', 'wheel', 'touchstart'].forEach((type) => {
+      document.addEventListener(type, markActed, { capture: true, once: true, passive: true });
+    });
+    const onSlideChanged = () => {
+      if (!readerActed) {
+        return;
+      }
+      const hadFocus = close();
+      if (hadFocus) {
+        focusWithoutScroll(focusTarget());
       }
     };
 
-    buttonContainer.appendChild(declineBtn);
-    buttonContainer.appendChild(acceptBtn);
-    modal.appendChild(title);
-    modal.appendChild(text);
-    modal.appendChild(buttonContainer);
-    overlay.appendChild(modal);
+    if (banner.classList.contains('remember-banner-fixed')) {
+      document.addEventListener('focusin', onFocusIn);
+      if (typeof Reveal !== 'undefined' && typeof Reveal.on === 'function') {
+        Reveal.on('slidechanged', onSlideChanged);
+      }
+    }
 
-    document.body.appendChild(overlay);
-    declineBtn.focus();
-    document.addEventListener('keydown', handleKeydown);
+    // A reader who scrolls past the banner has chosen to read on. The banner
+    // then leaves the page, with the view held still, so later saved
+    // positions do not include its height.
+    if (!banner.classList.contains('remember-banner-fixed') && 'IntersectionObserver' in window) {
+      // Only a banner the reader has seen counts as scrolled past, so a page
+      // that opens below it, such as a link to a section, keeps the offer. A
+      // banner that holds focus stays until focus leaves it.
+      let seen = false;
+      let scrolledPast = false;
+      const leave = () => {
+        observer.disconnect();
+        close();
+      };
+      const observer = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          seen = true;
+          scrolledPast = false;
+          return;
+        }
+        if (!seen || entry.boundingClientRect.top >= 0 || !banner.isConnected) {
+          return;
+        }
+        scrolledPast = true;
+        if (!banner.contains(document.activeElement)) {
+          leave();
+        }
+      });
+      banner.addEventListener('focusout', (e) => {
+        if (scrolledPast && banner.isConnected && !banner.contains(e.relatedTarget)) {
+          leave();
+        }
+      });
+      observer.observe(banner);
+    }
+
+    // Screen readers miss a live region that changes as soon as it enters
+    // the page, and the page load reading can drown a polite message, so the
+    // short announcement waits a second. It is cleared after ten seconds, so
+    // a reader who browses the page does not meet it twice.
+    timers.push(setTimeout(() => {
+      status.textContent = `Resume reading is available ${where}.`;
+    }, 1000));
+    timers.push(setTimeout(() => {
+      status.textContent = '';
+    }, 11000));
   }
 
   /**
@@ -433,7 +663,7 @@
 
     const saveCurrentPosition = () => {
       savePosition({
-        scrollY: window.scrollY,
+        scrollY: scrollWithoutBanner(),
         hash: window.location.hash
       });
     };
@@ -472,8 +702,8 @@
       const stored = getStoredPosition();
 
       if (stored && stored.slideIndices) {
-        const message = `You left this presentation ${formatTimestamp(stored.timestamp)}. Would you like to resume where you left off?`;
-        showPrompt(message,
+        const message = `You left this presentation ${formatTimestamp(stored.timestamp)}. You can resume where you left off.`;
+        showBanner(message,
           () => Reveal.slide(stored.slideIndices.h, stored.slideIndices.v, stored.slideIndices.f),
           () => clearStoredPosition()
         );
@@ -535,8 +765,8 @@
     if (inBook && CONFIG.separateChapterState && chapter && !sessionActive) {
       const currentPath = window.location.pathname;
       if (chapter.url && chapter.url !== currentPath) {
-        const message = `You were reading a different chapter ${formatTimestamp(stored ? stored.timestamp : Date.now())}. Would you like to return to where you were?`;
-        showPrompt(message,
+        const message = `You were reading a different chapter ${formatTimestamp(stored ? stored.timestamp : Date.now())}. You can return to where you were.`;
+        showBanner(message,
           () => {
             markSessionActive();
             window.location.href = chapter.url + (chapter.hash || '');
@@ -569,10 +799,10 @@
 
       if (shouldShowPrompt) {
         const message = isDifferentPage
-          ? `You were reading a different chapter ${formatTimestamp(stored.timestamp)}. Would you like to return to where you were?`
-          : `You visited this page ${formatTimestamp(stored.timestamp)}. Would you like to return to where you were?`;
+          ? `You were reading a different chapter ${formatTimestamp(stored.timestamp)}. You can return to where you were.`
+          : `You visited this page ${formatTimestamp(stored.timestamp)}. You can return to where you were.`;
 
-        showPrompt(message,
+        showBanner(message,
           () => {
             window.removeEventListener('beforeunload', handleNavigation);
             markSessionActive();

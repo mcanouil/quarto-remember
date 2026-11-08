@@ -67,7 +67,18 @@ The prompt is deliberately quiet:
 - it says how long ago the visit was, so the reader can judge;
 - declining clears the stored position rather than asking again.
 
-<kbd>Esc</kbd> counts as declining, and the dialogue carries the attributes a screen reader needs: `role="alertdialog"`, `aria-modal`, and a label and description bound to its title and message.
+The prompt is a banner, not a dialogue box.
+On an HTML page it sits after the title block, in the flow of the page.
+On a Reveal.js deck it is fixed at the bottom centre of the screen, above the slide footer and clear of the menu button and the controls.
+When keyboard focus lands on an element behind it, it moves to the other edge of the screen, so the focused element stays in view.
+It does not cover the page, move focus, trap focus, or close on a timer.
+It is a region named "Resume reading", with a Resume button and a Dismiss button.
+About a second after the page loads, a polite live region says once where the banner is, so a screen reader user hears that it is there.
+<kbd>Esc</kbd> inside the banner counts as Dismiss, and keys pressed in the banner do not reach Reveal.js.
+When the banner closes while it holds focus, focus moves to the first visible heading, or to the current slide, so it is not lost.
+A reader who scrolls past the banner without answering has chosen to read on, so the banner leaves the page and the view stays where it is.
+If the banner holds keyboard focus, it stays until focus leaves it.
+On a Reveal.js deck, moving to another slide counts as reading on in the same way.
 
 In a book the prompt offers the chapter that was being read, and accepting it navigates there.
 

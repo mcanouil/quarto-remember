@@ -8,6 +8,8 @@
   Write `about.qmd` or `drafts/*.qmd` where you wrote `/about.html` or `/drafts/*`.
   An entry that still looks like a URL gets a warning.
   An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#33)
+- feat: Offer to resume in a banner below the page title, which doesn't cover the page or take focus, instead of a modal dialogue.
+  Style `.remember-banner` where you styled `.remember-overlay` or `.remember-modal`. (#34)
 
 ### New Features
 
