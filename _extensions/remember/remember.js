@@ -316,17 +316,27 @@
   /**
    * Return the scroll position as it would be without the banner. While the
    * top of the view is inside an in-flow banner, the position is the top of
-   * the banner, because the banner is gone on the next visit. Once the reader
-   * scrolls past it, the banner leaves the page, so no other case adds it.
+   * the banner, because the banner is gone on the next visit. Past the
+   * banner, the space it takes is removed.
    *
    * @returns {number}
    */
   function scrollWithoutBanner() {
     const banner = document.querySelector('.remember-banner:not(.remember-banner-fixed)');
-    if (banner && banner.getBoundingClientRect().top < 0) {
-      return Math.max(0, Math.round(window.scrollY + banner.getBoundingClientRect().top));
+    if (!banner) {
+      return window.scrollY;
     }
-    return window.scrollY;
+    const rect = banner.getBoundingClientRect();
+    if (rect.top >= 0) {
+      return window.scrollY;
+    }
+    if (rect.bottom > 0 || !banner.nextElementSibling) {
+      return Math.max(0, Math.round(window.scrollY + rect.top));
+    }
+    // A focused banner stays in the page after the reader scrolls past it,
+    // so the space it takes is removed from the saved position.
+    const taken = banner.nextElementSibling.getBoundingClientRect().top - rect.top;
+    return Math.max(0, Math.round(window.scrollY - taken));
   }
 
   /**
@@ -494,25 +504,36 @@
     // positions do not include its height.
     if (!banner.classList.contains('remember-banner-fixed') && 'IntersectionObserver' in window) {
       // Only a banner the reader has seen counts as scrolled past, so a page
-      // that opens below it, such as a link to a section, keeps the offer.
+      // that opens below it, such as a link to a section, keeps the offer. A
+      // banner that holds focus stays until focus leaves it.
       let seen = false;
+      let scrolledPast = false;
+      const leave = () => {
+        observer.disconnect();
+        const anchor = banner.nextElementSibling;
+        const before = anchor ? anchor.getBoundingClientRect().top : 0;
+        close();
+        const after = anchor ? anchor.getBoundingClientRect().top : 0;
+        window.scrollBy({ top: after - before, left: 0, behavior: 'instant' });
+      };
       const observer = new IntersectionObserver((entries) => {
         const entry = entries[0];
         if (entry.isIntersecting) {
           seen = true;
+          scrolledPast = false;
           return;
         }
         if (!seen || entry.boundingClientRect.top >= 0 || !banner.isConnected) {
           return;
         }
-        observer.disconnect();
-        const anchor = banner.nextElementSibling;
-        const before = anchor ? anchor.getBoundingClientRect().top : 0;
-        const hadFocus = close();
-        const after = anchor ? anchor.getBoundingClientRect().top : 0;
-        window.scrollBy(0, after - before);
-        if (hadFocus) {
-          focusWithoutScroll(focusTarget());
+        scrolledPast = true;
+        if (!banner.contains(document.activeElement)) {
+          leave();
+        }
+      });
+      banner.addEventListener('focusout', (e) => {
+        if (scrolledPast && banner.isConnected && !banner.contains(e.relatedTarget)) {
+          leave();
         }
       });
       observer.observe(banner);
