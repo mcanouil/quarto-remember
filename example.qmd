@@ -43,8 +43,8 @@ Opt pages out when they are not worth resuming:
 extensions:
   remember:
     page-exclude:
-      - /search.html
-      - /drafts/*
+      - search.qmd
+      - drafts/*.qmd
 ```
 
 In a book the chapter is remembered as well, and a return visit redirects to it.

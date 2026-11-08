@@ -94,8 +94,9 @@ end
 
 --- Return the path of the source file, relative to the project root, with
 --- `/` separators. A single document rendered outside a project has no root,
---- so its base name stands in for the relative path.
---- @return string The project-relative source path
+--- so its base name stands in for the relative path. A file outside the
+--- project root gets `nil`, so no pattern can match it by accident.
+--- @return string|nil The project-relative source path
 local function source_path()
   local input = (quarto.doc.input_file or ''):gsub('\\', '/')
   local root = quarto.project.directory
@@ -106,7 +107,35 @@ local function source_path()
   if input:sub(1, #root) == root then
     return input:sub(#root + 1)
   end
-  return (input:match('[^/]+$') or input)
+  return nil
+end
+
+--- Resolve a pattern that Quarto made relative to the page.
+--- Quarto rewrites a project metadata string that names an existing file so
+--- that it is relative to the page being rendered: on `guide/intro.qmd`, the
+--- entry `guide/intro.qmd` arrives as `../guide/intro.qmd`. Such a pattern is
+--- joined to the folder of the page and collapsed back to a project-relative
+--- path. Any other pattern is already relative to the project.
+--- @param pattern string The pattern as the filter receives it
+--- @param page string The project-relative path of the page
+--- @return string The project-relative pattern
+local function project_relative(pattern, page)
+  pattern = pattern:gsub('\\', '/')
+  if pattern:sub(1, 3) ~= '../' then
+    return (pattern:gsub('^%./', ''))
+  end
+  local parts = {}
+  for segment in (page:match('^(.*)/[^/]*$') or ''):gmatch('[^/]+') do
+    parts[#parts + 1] = segment
+  end
+  for segment in pattern:gmatch('[^/]+') do
+    if segment == '..' then
+      parts[#parts] = nil
+    elseif segment ~= '.' then
+      parts[#parts + 1] = segment
+    end
+  end
+  return table.concat(parts, '/')
 end
 
 --- Turn a `page-exclude` pattern into an anchored Lua pattern. Every
@@ -114,7 +143,7 @@ end
 --- @param pattern string A project-relative path, optionally with `*`
 --- @return string The anchored Lua pattern
 local function to_lua_pattern(pattern)
-  local escaped = pattern:gsub('^%./', ''):gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0')
+  local escaped = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0')
   return '^' .. escaped:gsub('%*', '[^/]*') .. '$'
 end
 
@@ -123,9 +152,18 @@ end
 --- @return boolean True when the page must carry no remember code
 local function is_excluded(patterns)
   if #patterns == 0 then return false end
-  local path = source_path()
   for _, pattern in ipairs(patterns) do
-    if path:match(to_lua_pattern(pattern)) then return true end
+    if pattern:sub(1, 1) == '/' or pattern:match('%.html$') then
+      log.log_warning(EXTENSION_NAME,
+        "page-exclude entry '" .. pattern .. "' looks like a URL. " ..
+        "Since remember 2.0.0, entries name source files relative to the project, " ..
+        "for example 'about.qmd' or 'drafts/*.qmd'.")
+    end
+  end
+  local path = source_path()
+  if path == nil then return false end
+  for _, pattern in ipairs(patterns) do
+    if path:match(to_lua_pattern(project_relative(pattern, path))) then return true end
   end
   return false
 end

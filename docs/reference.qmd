@@ -35,6 +35,7 @@ A `*` matches any text inside one path segment.
 The match occurs when Quarto renders the page, so the result is the same on every host and under every sub-path.
 An excluded page gets no remember script, no stylesheet, and no configuration.
 A single document rendered outside a project matches against its file name.
+An entry that starts with `/` or ends in `.html` looks like a URL, so the filter shows a warning for it.
 
 With `separate-chapter-state` on, a return visit can offer to reopen the previous chapter even when the reader never scrolled in it.
 

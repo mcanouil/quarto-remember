@@ -42,7 +42,8 @@ They are excluded to show `page-exclude` working: scroll the changelog, leave, c
 
 ## Excluding pages
 
-Each entry is matched against the browser's pathname, as a literal substring or as a glob where `*` covers one path segment:
+Each entry names a source file relative to the project, and must match the whole path.
+A `*` covers any text inside one path segment:
 
 ```yaml
 extensions:

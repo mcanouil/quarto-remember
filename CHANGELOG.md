@@ -6,6 +6,7 @@
 
 - feat: Match `page-exclude` against the source file, relative to the project, rather than the page URL.
   Write `about.qmd` or `drafts/*.qmd` where you wrote `/about.html` or `/drafts/*`.
+  An entry that still looks like a URL gets a warning.
   An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#PR)
 
 ### New Features
