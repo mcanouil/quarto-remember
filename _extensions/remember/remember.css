@@ -16,6 +16,9 @@
  */
 
 .remember-overlay {
+  --remember-bg: var(--bs-body-bg, var(--r-background-color, Canvas));
+  --remember-fg: var(--bs-body-color, var(--r-main-color, CanvasText));
+
   position: fixed;
   inset: 0;
   background-color: rgb(0 0 0 / 50%);
@@ -27,8 +30,8 @@
 }
 
 .remember-modal {
-  background: var(--bs-body-bg, var(--r-background-color, Canvas));
-  color: var(--bs-body-color, var(--r-main-color, CanvasText));
+  background: var(--remember-bg);
+  color: var(--remember-fg);
   font-family: var(--bs-body-font-family, var(--r-main-font, inherit));
   border: var(--bs-border-width, 1px) solid var(--bs-border-color-translucent, rgb(0 0 0 / 17.5%));
   border-radius: var(--bs-border-radius-lg, 0.5rem);
@@ -79,7 +82,7 @@
 
 :where(.remember-btn-accept) {
   background-color: var(--r-link-color, LinkText);
-  color: var(--r-background-color, Canvas);
+  color: var(--remember-bg);
 }
 
 :where(.remember-btn-decline) {
@@ -93,7 +96,7 @@
 }
 
 .remember-btn:focus-visible {
-  outline: 3px solid var(--bs-body-color, var(--r-main-color, Highlight));
+  outline: 3px solid var(--remember-fg);
   outline-offset: 2px;
 }
 

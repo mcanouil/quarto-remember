@@ -17,6 +17,7 @@ local EXTENSION_NAME = 'remember'
 --- Load modules
 local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
+local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
 local metadata = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/metadata.lua'):gsub('%.lua$', ''))
 local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
 local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
@@ -143,8 +144,7 @@ end
 --- @param pattern string A project-relative path, optionally with `*`
 --- @return string The anchored Lua pattern
 local function to_lua_pattern(pattern)
-  local escaped = pattern:gsub('[%^%$%(%)%%%.%[%]%+%-%?]', '%%%0')
-  return '^' .. escaped:gsub('%*', '[^/]*') .. '$'
+  return '^' .. str.escape_lua_pattern(pattern):gsub('%%%*', '[^/]*') .. '$'
 end
 
 --- Report whether the source file matches one of the `page-exclude` patterns.
