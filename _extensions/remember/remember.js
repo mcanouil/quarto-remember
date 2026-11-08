@@ -314,6 +314,22 @@
   }
 
   /**
+   * Return the scroll position as it would be without the banner. While the
+   * top of the view is inside an in-flow banner, the position is the top of
+   * the banner, because the banner is gone on the next visit. Once the reader
+   * scrolls past it, the banner leaves the page, so no other case adds it.
+   *
+   * @returns {number}
+   */
+  function scrollWithoutBanner() {
+    const banner = document.querySelector('.remember-banner:not(.remember-banner-fixed)');
+    if (banner && banner.getBoundingClientRect().top < 0) {
+      return Math.max(0, Math.round(window.scrollY + banner.getBoundingClientRect().top));
+    }
+    return window.scrollY;
+  }
+
+  /**
    * Report whether an element is rendered, in the viewport, and not hidden
    * from assistive technology.
    *
@@ -353,11 +369,13 @@
   /**
    * Move focus to an element that does not take focus by itself, without
    * scrolling, so focus is not lost to `body` when the banner goes away.
+   * Focus the reader has already placed elsewhere is left alone.
    *
    * @param {HTMLElement|null} element
    */
   function focusWithoutScroll(element) {
-    if (!element) {
+    const active = document.activeElement;
+    if (!element || (active && active !== document.body && active !== document.documentElement)) {
       return;
     }
     if (!element.hasAttribute('tabindex')) {
@@ -475,17 +493,27 @@
     // then leaves the page, with the view held still, so later saved
     // positions do not include its height.
     if (!banner.classList.contains('remember-banner-fixed') && 'IntersectionObserver' in window) {
+      // Only a banner the reader has seen counts as scrolled past, so a page
+      // that opens below it, such as a link to a section, keeps the offer.
+      let seen = false;
       const observer = new IntersectionObserver((entries) => {
         const entry = entries[0];
-        if (entry.isIntersecting || entry.boundingClientRect.top >= 0 || !banner.isConnected) {
+        if (entry.isIntersecting) {
+          seen = true;
+          return;
+        }
+        if (!seen || entry.boundingClientRect.top >= 0 || !banner.isConnected) {
           return;
         }
         observer.disconnect();
         const anchor = banner.nextElementSibling;
         const before = anchor ? anchor.getBoundingClientRect().top : 0;
-        close();
+        const hadFocus = close();
         const after = anchor ? anchor.getBoundingClientRect().top : 0;
         window.scrollBy(0, after - before);
+        if (hadFocus) {
+          focusWithoutScroll(focusTarget());
+        }
       });
       observer.observe(banner);
     }
@@ -551,7 +579,7 @@
 
     const saveCurrentPosition = () => {
       savePosition({
-        scrollY: window.scrollY,
+        scrollY: scrollWithoutBanner(),
         hash: window.location.hash
       });
     };
