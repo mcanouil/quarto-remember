@@ -499,6 +499,26 @@
     banner.appendChild(buttons);
     const where = placeBanner(banner);
 
+    // A fixed banner must not hide the element that has keyboard focus. When
+    // focus lands behind it, the banner moves to the other edge of the screen.
+    const onFocusIn = (e) => {
+      if (!banner.isConnected) {
+        document.removeEventListener('focusin', onFocusIn);
+        return;
+      }
+      if (banner.contains(e.target)) {
+        return;
+      }
+      const overlaps = (r, b) => r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top;
+      const target = e.target.getBoundingClientRect();
+      if (overlaps(target, banner.getBoundingClientRect())) {
+        banner.classList.toggle('remember-banner-top');
+      }
+    };
+    if (banner.classList.contains('remember-banner-fixed')) {
+      document.addEventListener('focusin', onFocusIn);
+    }
+
     // A reader who scrolls past the banner has chosen to read on. The banner
     // then leaves the page, with the view held still, so later saved
     // positions do not include its height.

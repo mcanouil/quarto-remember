@@ -7,7 +7,8 @@
  * The banner sits in the page flow and does not cover the page. On a
  * Reveal.js deck it is fixed at the bottom centre, above the slide footer,
  * clear of the menu button in the bottom left corner and of the controls in
- * the bottom right corner.
+ * the bottom right corner. It moves to the top edge while keyboard focus is
+ * on an element behind it.
  *
  * Every colour, the radius, and the font come from the page theme: the
  * Bootstrap 5 custom properties on an HTML page, the Reveal.js theme
@@ -53,6 +54,11 @@
   margin: 0;
   font-size: 1rem;
   box-shadow: var(--bs-box-shadow, 0 0.5rem 1rem rgb(0 0 0 / 15%));
+}
+
+.remember-banner-fixed.remember-banner-top {
+  inset-block-start: 1rem;
+  inset-block-end: auto;
 }
 
 .remember-message {

@@ -69,7 +69,8 @@ The prompt is deliberately quiet:
 
 The prompt is a banner, not a dialogue box.
 On an HTML page it sits after the title block, in the flow of the page.
-On a Reveal.js deck it is fixed at the bottom centre of the screen, clear of the menu button and the controls.
+On a Reveal.js deck it is fixed at the bottom centre of the screen, above the slide footer and clear of the menu button and the controls.
+When keyboard focus lands on an element behind it, it moves to the other edge of the screen, so the focused element stays in view.
 It does not cover the page, move focus, trap focus, or close on a timer.
 It is a region named "Resume reading", with a Resume button and a Dismiss button.
 About a second after the page loads, a polite live region says once where the banner is, so a screen reader user hears that it is there.
