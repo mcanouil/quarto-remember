@@ -77,7 +77,7 @@
   font: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, filter 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 :where(.remember-btn-accept) {
@@ -92,11 +92,11 @@
 }
 
 @media (hover: hover) {
-  :where(.remember-btn-accept):hover {
-    filter: brightness(0.9);
+  :where(.remember-btn-accept:hover) {
+    background-color: color-mix(in srgb, var(--r-link-color, LinkText) 85%, black);
   }
 
-  :where(.remember-btn-decline):hover {
+  :where(.remember-btn-decline:hover) {
     background-color: color-mix(in srgb, currentColor 10%, transparent);
   }
 }

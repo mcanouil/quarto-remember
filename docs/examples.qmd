@@ -35,8 +35,8 @@ They are excluded to show `page-exclude` working: scroll the changelog, leave, c
 
 | On this site | Behaviour |
 | --- | --- |
-| Any other page | Scroll position and section restored, on request when the visit is new. |
 | The home page, the 404 page, and the changelog | Nothing stored, nothing offered. |
+| Any other page | Scroll position and section restored, on request when the visit is new. |
 
 : This site's behaviour, page by page. {.striped .hover tbl-colwidths="[36,64]"}
 
