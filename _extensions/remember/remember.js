@@ -333,7 +333,7 @@
     const declineBtn = document.createElement('button');
     declineBtn.type = 'button';
     declineBtn.textContent = 'No';
-    declineBtn.className = 'remember-btn remember-btn-decline';
+    declineBtn.className = 'remember-btn remember-btn-decline btn btn-outline-secondary';
     declineBtn.setAttribute('aria-label', 'No, start from the beginning');
     declineBtn.onclick = () => {
       cleanup();
@@ -343,7 +343,7 @@
     const acceptBtn = document.createElement('button');
     acceptBtn.type = 'button';
     acceptBtn.textContent = 'Yes';
-    acceptBtn.className = 'remember-btn remember-btn-accept';
+    acceptBtn.className = 'remember-btn remember-btn-accept btn btn-primary';
     acceptBtn.setAttribute('aria-label', 'Yes, resume where I left off');
     acceptBtn.onclick = () => {
       cleanup();

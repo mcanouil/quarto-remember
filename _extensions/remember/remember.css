@@ -3,17 +3,22 @@
  * Styles for the navigation resume prompt
  *
  * @author Mickaël Canouil
- * @version 1.0.0
+ *
+ * Every colour, the radius, and the font come from the page theme: the
+ * Bootstrap 5 custom properties on an HTML page, the Reveal.js theme
+ * properties on a slide deck, and the system colours elsewhere. The theme
+ * variables change with the colour scheme, so the prompt follows the scheme
+ * that the page shows, not the scheme of the operating system.
+ *
+ * The buttons also carry the Bootstrap `btn` classes. The button rules below
+ * sit inside `:where()`, which has no specificity, so Bootstrap's own button
+ * rules win on a Bootstrap page and these rules apply only where it is absent.
  */
 
-/* Overlay - covers the entire viewport */
 .remember-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background-color: rgb(0 0 0 / 50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,124 +26,66 @@
   animation: remember-fade-in 0.2s ease-out;
 }
 
-@media (prefers-color-scheme: dark) {
-  .remember-overlay {
-    background-color: rgba(0, 0, 0, 0.7);
-  }
-}
-
-/* Modal container */
 .remember-modal {
-  background: white;
-  border-radius: 8px;
+  background: var(--bs-body-bg, var(--r-background-color, Canvas));
+  color: var(--bs-body-color, var(--r-main-color, CanvasText));
+  font-family: var(--bs-body-font-family, var(--r-main-font, inherit));
+  border: var(--bs-border-width, 1px) solid var(--bs-border-color-translucent, rgb(0 0 0 / 17.5%));
+  border-radius: var(--bs-border-radius-lg, 0.5rem);
   padding: 2rem;
   max-width: 500px;
   width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--bs-box-shadow-lg, 0 1rem 3rem rgb(0 0 0 / 17.5%));
   animation: remember-slide-up 0.3s ease-out;
   will-change: transform, opacity;
 }
 
-/* Dark mode support - system preference */
-@media (prefers-color-scheme: dark) {
-  .remember-modal {
-    background: #1a1a1a;
-    color: #f0f0f0;
-  }
-}
-
-/* Dark mode support - Quarto theme classes */
-.quarto-dark .remember-modal {
-  background: #1a1a1a;
-  color: #f0f0f0;
-}
-
-/* Light mode support - Quarto theme classes (explicit override) */
-.quarto-light .remember-modal {
-  background: white;
-  color: #1a1a1a;
-}
-
-/* Title */
 .remember-title {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1rem;
+  font-family: var(--bs-headings-font-family, var(--r-heading-font, inherit));
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1a1a1a; /* Improved contrast from #333 */
+  color: inherit;
 }
 
-@media (prefers-color-scheme: dark) {
-  .remember-title {
-    color: #f0f0f0; /* Improved contrast from #e0e0e0 */
-  }
-}
-
-.quarto-dark .remember-title {
-  color: #f0f0f0;
-}
-
-.quarto-light .remember-title {
-  color: #1a1a1a;
-}
-
-/* Message text */
 .remember-message {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1.5rem;
   font-size: 1rem;
   line-height: 1.5;
-  color: #4a4a4a; /* Improved contrast from #666 - meets WCAG AA (7:1) */
+  color: inherit;
 }
 
-@media (prefers-color-scheme: dark) {
-  .remember-message {
-    color: #d0d0d0; /* Improved contrast from #b0b0b0 */
-  }
-}
-
-.quarto-dark .remember-message {
-  color: #d0d0d0;
-}
-
-.quarto-light .remember-message {
-  color: #4a4a4a;
-}
-
-/* Button container */
 .remember-buttons {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
 }
 
-/* Base button styles */
+/* Keep the targets large enough to tap, whichever rules style the buttons. */
 .remember-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  /* Ensure text remains readable when zoomed */
   min-height: 44px;
   min-width: 44px;
 }
 
-@media (hover: hover) {
-  .remember-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  }
+:where(.remember-btn) {
+  padding: 0.75rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--bs-border-radius, 0.375rem);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.remember-btn:active {
-  transform: translateY(0);
+:where(.remember-btn-accept) {
+  background-color: var(--r-link-color, LinkText);
+  color: var(--r-background-color, Canvas);
 }
 
-/* Enhanced focus indicators for better visibility */
-.remember-btn:focus {
-  outline: 3px solid #4a90e2;
-  outline-offset: 2px;
+:where(.remember-btn-decline) {
+  background-color: transparent;
+  color: inherit;
+  border-color: currentColor;
 }
 
 .remember-btn:focus:not(:focus-visible) {
@@ -146,70 +93,10 @@
 }
 
 .remember-btn:focus-visible {
-  outline: 3px solid #4a90e2;
+  outline: 3px solid var(--bs-focus-ring-color, Highlight);
   outline-offset: 2px;
 }
 
-/* Accept button */
-.remember-btn-accept {
-  background-color: #4a90e2;
-  color: white;
-}
-
-@media (hover: hover) {
-  .remember-btn-accept:hover {
-    background-color: #357abd;
-  }
-}
-
-/* Decline button */
-.remember-btn-decline {
-  background-color: #e0e0e0;
-  color: #1a1a1a; /* Improved contrast from #333 */
-}
-
-@media (hover: hover) {
-  .remember-btn-decline:hover {
-    background-color: #d0d0d0;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .remember-btn-decline {
-    background-color: #4a4a4a; /* Improved contrast from #444 */
-    color: #f0f0f0; /* Improved contrast from #e0e0e0 */
-  }
-}
-
-@media (prefers-color-scheme: dark) and (hover: hover) {
-  .remember-btn-decline:hover {
-    background-color: #5a5a5a; /* Improved from #555 */
-  }
-}
-
-.quarto-dark .remember-btn-decline {
-  background-color: #4a4a4a;
-  color: #f0f0f0;
-}
-
-@media (hover: hover) {
-  .quarto-dark .remember-btn-decline:hover {
-    background-color: #5a5a5a;
-  }
-}
-
-.quarto-light .remember-btn-decline {
-  background-color: #e0e0e0;
-  color: #1a1a1a;
-}
-
-@media (hover: hover) {
-  .quarto-light .remember-btn-decline:hover {
-    background-color: #d0d0d0;
-  }
-}
-
-/* Animations */
 @keyframes remember-fade-in {
   from {
     opacity: 0;
@@ -232,25 +119,17 @@
   }
 }
 
-/* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .remember-overlay,
   .remember-modal {
     animation: none;
   }
 
-  .remember-btn {
+  :where(.remember-btn) {
     transition: none;
-  }
-
-  @media (hover: hover) {
-    .remember-btn:hover {
-      transform: none;
-    }
   }
 }
 
-/* Responsive design for small screens */
 @media (max-width: 600px) {
   .remember-modal {
     padding: 1.5rem;
@@ -272,12 +151,10 @@
 
   .remember-btn {
     width: 100%;
-    padding: 0.875rem 1.5rem;
   }
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   .remember-modal {
     border: 2px solid currentColor;
   }
@@ -286,26 +163,12 @@
     border: 2px solid currentColor;
   }
 
-  .remember-btn:focus,
   .remember-btn:focus-visible {
     outline: 4px solid currentColor;
     outline-offset: 3px;
   }
-
-  .remember-btn-accept {
-    background-color: #0066cc;
-    color: white;
-    border-color: white;
-  }
-
-  .remember-btn-decline {
-    background-color: #f0f0f0;
-    color: #000;
-    border-color: #000;
-  }
 }
 
-/* Windows High Contrast Mode support */
 @media (forced-colors: active) {
   .remember-modal {
     border: 2px solid CanvasText;
@@ -313,16 +176,9 @@
 
   .remember-btn {
     border: 1px solid ButtonText;
-    forced-color-adjust: none;
   }
 
-  .remember-btn:focus,
   .remember-btn:focus-visible {
     outline: 3px solid Highlight;
   }
-}
-
-/* Ensure modal is above Reveal.js controls */
-.reveal .remember-overlay {
-  z-index: 10000;
 }

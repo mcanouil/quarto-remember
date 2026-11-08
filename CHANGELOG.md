@@ -8,6 +8,12 @@
   Write `about.qmd` or `drafts/*.qmd` where you wrote `/about.html` or `/drafts/*`.
   An excluded page now carries no remember code at all, and the match no longer depends on where the site is hosted. (#PR)
 
+### New Features
+
+- feat: Take the prompt colours, font and radius from the page theme, and give its buttons the Bootstrap button classes.
+  The prompt now matches the site, and follows the colour scheme the page shows rather than the one the system prefers.
+  On a Reveal.js deck it takes the deck theme colours and font. (#PR)
+
 ### Refactoring
 
 - build: Update the vendored Lua modules to 2.7.0 and add `metadata.lua`, so the project type comes from the shared `get_project_metadata` helper. The warnings stay the same for any file that Quarto writes. (#31)
