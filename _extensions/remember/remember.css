@@ -77,7 +77,7 @@
   font: inherit;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, filter 0.2s ease;
 }
 
 :where(.remember-btn-accept) {
@@ -89,6 +89,16 @@
   background-color: transparent;
   color: inherit;
   border-color: currentColor;
+}
+
+@media (hover: hover) {
+  :where(.remember-btn-accept):hover {
+    filter: brightness(0.9);
+  }
+
+  :where(.remember-btn-decline):hover {
+    background-color: color-mix(in srgb, currentColor 10%, transparent);
+  }
 }
 
 .remember-btn:focus:not(:focus-visible) {

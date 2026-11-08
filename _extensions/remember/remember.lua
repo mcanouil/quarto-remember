@@ -156,12 +156,17 @@ local function is_excluded(patterns)
     if pattern:sub(1, 1) == '/' or pattern:match('%.html$') then
       log.log_warning(EXTENSION_NAME,
         "page-exclude entry '" .. pattern .. "' looks like a URL. " ..
-        "Since remember 2.0.0, entries name source files relative to the project, " ..
+        "Entries name source files relative to the project, " ..
         "for example 'about.qmd' or 'drafts/*.qmd'.")
     end
   end
   local path = source_path()
-  if path == nil then return false end
+  if path == nil then
+    log.log_warning(EXTENSION_NAME,
+      "Could not place '" .. tostring(quarto.doc.input_file) .. "' inside the project directory '" ..
+      tostring(quarto.project.directory) .. "', so page-exclude is not applied to it.")
+    return false
+  end
   for _, pattern in ipairs(patterns) do
     if path:match(to_lua_pattern(project_relative(pattern, path))) then return true end
   end
