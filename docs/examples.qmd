@@ -83,6 +83,7 @@ The prompt is deliberately reticent, and these are the usual reasons it stays aw
 | Already declined | Declining clears the stored position rather than deferring it. |
 | Storage refused | A browser that will not write to `localStorage`, such as a private window, disables the feature with one console warning. |
 | Page excluded | The source file matches an entry in `page-exclude`, so the page has no remember code. |
+| Filter disabled | `enabled` is `false`, so no page has remember code. |
 
 : Why a prompt may not appear. {.striped .hover tbl-colwidths="[30,70]"}
 
