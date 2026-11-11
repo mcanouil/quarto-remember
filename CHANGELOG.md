@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: The HTML dependency folder now uses the extension version, so browsers load the new files after an upgrade. (#36)
+
 ## 2.0.0 (2026-11-08)
 
 ### Breaking Changes

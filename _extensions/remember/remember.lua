@@ -227,7 +227,6 @@ local function inject_dependencies(meta)
 
   html_mod.ensure_html_dependency({
     name = EXTENSION_NAME,
-    version = '1.0.0',
     scripts = { 'remember.js' },
     stylesheets = { 'remember.css' },
   })
