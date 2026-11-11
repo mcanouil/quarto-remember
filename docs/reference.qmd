@@ -1,7 +1,7 @@
 ---
 title: "Reference"
 subtitle: "Every option the remember extension accepts."
-description: "The complete remember configuration: the two options, what is stored where, how a book is detected, and the conditions under which a reader is prompted."
+description: "The complete remember configuration: the three options, what is stored where, how a book is detected, and the conditions under which a reader is prompted."
 ---
 
 ## Enabling the filter
@@ -16,6 +16,7 @@ filters:
 ```yaml
 extensions:
   remember:
+    enabled: true
     page-exclude:
       - drafts/*.qmd
       - search.qmd
@@ -24,10 +25,14 @@ extensions:
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
+| `enabled` | boolean | `true` | When `false`, the filter adds nothing to any page. |
 | `page-exclude` | list of strings | empty | Source files to leave out of persistence. |
 | `separate-chapter-state` | boolean | `false` | In a book, stores the chapter separately from the scroll position inside it. Ignored elsewhere. |
 
 : Document and project options. {.striped .hover tbl-colwidths="[24,16,10,50]"}
+
+With `enabled: false`, `remember` can stay in `filters` and add nothing.
+This lets a bundle of filters ship `remember` turned off, and a project turn it on with `enabled: true`.
 
 Each `page-exclude` entry is a path to a source file, relative to the project root, such as `index.qmd` or `drafts/*.qmd`.
 An entry must match the whole path, so `index.qmd` matches the root page and not `guide/index.qmd`.

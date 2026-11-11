@@ -23,6 +23,7 @@ filters:
   - remember
 extensions:
   remember:
+    enabled: true
     page-exclude: []
     separate-chapter-state: false
 ---

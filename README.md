@@ -16,7 +16,7 @@ If you're using version control, you will want to check in this directory.
 
 ## Documentation
 
-The full documentation lives at <https://m.canouil.dev/quarto-remember/>: the two options, what each format stores, when the reader is prompted, and the site itself running the extension so you can try it.
+The full documentation lives at <https://m.canouil.dev/quarto-remember/>: the three options, what each format stores, when the reader is prompted, and the site itself running the extension so you can try it.
 
 [`example.qmd`](example.qmd) is a short, standalone starting point you can copy.
 
