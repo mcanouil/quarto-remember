@@ -830,8 +830,17 @@
   function initHTML() {
     const note = takeResumeNote();
     if (note) {
-      restoreScrollPosition(note);
-      setupScrollTracking();
+      // Images, maths and fonts above the stored position change the layout
+      // until the page has loaded, so the position is restored after that.
+      const restore = () => {
+        restoreScrollPosition(note);
+        setupScrollTracking();
+      };
+      if (document.readyState === 'complete') {
+        restore();
+      } else {
+        window.addEventListener('load', restore, { once: true });
+      }
       return;
     }
 
