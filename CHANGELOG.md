@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.1.2 (2026-11-18)
+
 - fix: Books now use book mode, because the script reads its configuration once the page has loaded. (#41)
 - fix: Resume in a book now opens the stored chapter at the stored position. (#42)
 - fix: A new visit to the stored chapter of a book now shows the banner, rather than scrolling without asking. (#42)
