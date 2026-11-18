@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Reveal.js decks now save the current slide and offer to resume, because the extension no longer waits for a `ready` event that has already fired.
+
 ## 2.1.2 (2026-11-18)
 
 - fix: Books now use book mode, because the script reads its configuration once the page has loaded. (#41)

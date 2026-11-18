@@ -714,7 +714,7 @@
       return;
     }
 
-    Reveal.on('ready', () => {
+    const start = () => {
       const stored = getStoredPosition();
 
       if (stored && stored.slideIndices) {
@@ -732,7 +732,15 @@
       window.addEventListener('beforeunload', () => {
         savePosition({ slideIndices: Reveal.getIndices() });
       });
-    });
+    };
+
+    // Quarto initialises Reveal.js before `DOMContentLoaded`, so the deck is
+    // often ready before this runs, and its `ready` event has already fired.
+    if (typeof Reveal.isReady === 'function' && Reveal.isReady()) {
+      start();
+    } else {
+      Reveal.on('ready', start);
+    }
   }
 
   /**
