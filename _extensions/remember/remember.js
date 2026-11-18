@@ -784,7 +784,8 @@
       };
       sessionStorage.setItem(RESUME_NOTE_KEY, JSON.stringify(note));
     } catch (e) {
-      // sessionStorage refused to write; Resume then opens the page at the top.
+      // sessionStorage refused to write: the target page shows the banner
+      // again, and the reader resumes from there.
     }
   }
 
