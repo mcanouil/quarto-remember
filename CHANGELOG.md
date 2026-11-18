@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.1.1 (2026-11-18)
+
 - fix: A link to a page you read earlier in the session now opens the page at the top, rather than at the saved position without the banner. (#39)
 
 ## 2.1.0 (2026-11-11)
