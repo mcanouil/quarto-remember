@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: Books now use book mode, because the script reads its configuration once the page has loaded.
+
 ## 2.1.1 (2026-11-18)
 
 - fix: A link to a page you read earlier in the session now opens the page at the top, rather than at the saved position without the banner. (#39)
