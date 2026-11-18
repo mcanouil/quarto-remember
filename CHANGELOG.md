@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- fix: A link to a page you read earlier in the session now opens the page at the top, rather than at the saved position without the banner.
+
 ## 2.1.0 (2026-11-11)
 
 - fix: The HTML dependency folder now uses the extension version, so browsers load the new files after an upgrade. (#36)

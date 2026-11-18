@@ -825,12 +825,6 @@
       } else if (!inBook && !isDifferentPage) {
         restoreScrollPosition(stored);
       }
-    } else if (sessionActive && stored) {
-      const currentPath = window.location.pathname;
-      const storedPath = stored.url || currentPath;
-      if (currentPath === storedPath) {
-        restoreScrollPosition(stored);
-      }
     }
 
     setupScrollTracking();
