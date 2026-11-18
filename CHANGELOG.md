@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- fix: Books now use book mode, because the script reads its configuration once the page has loaded.
+- fix: Books now use book mode, because the script reads its configuration once the page has loaded. (#41)
 
 ## 2.1.1 (2026-11-18)
 
