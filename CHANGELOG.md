@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- fix: Reveal.js decks now save the current slide and offer to resume, because the extension no longer waits for a `ready` event that has already fired.
+- fix: Reveal.js decks now save the current slide and offer to resume, because the extension no longer waits for a `ready` event that has already fired. (#45)
 
 ## 2.1.2 (2026-11-18)
 
