@@ -60,7 +60,9 @@
     }
   }
 
-  const CONFIG = readConfig();
+  // Read in `init()`: the configuration tag comes after this script in the
+  // page head, so it does not exist yet when the script runs.
+  let CONFIG;
 
   /**
    * Feature-detect `localStorage` and `sessionStorage` before any other work.
@@ -115,7 +117,7 @@
     return window.location.pathname;
   }
 
-  let pageIdentifier = computePageIdentifier();
+  let pageIdentifier;
 
   /**
    * Invalidate the cached page identifier whenever the URL changes within
@@ -838,6 +840,8 @@
       console.warn('Remember: localStorage is unavailable; navigation persistence is disabled for this session.');
       return;
     }
+    CONFIG = readConfig();
+    pageIdentifier = computePageIdentifier();
     watchPageIdentifier();
     if (document.querySelector('.reveal')) {
       initRevealJS();
