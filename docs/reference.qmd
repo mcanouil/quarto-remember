@@ -85,7 +85,9 @@ A reader who scrolls past the banner without answering has chosen to read on, so
 If the banner holds keyboard focus, it stays until focus leaves it.
 On a Reveal.js deck, moving to another slide counts as reading on in the same way.
 
-In a book the prompt offers the chapter that was being read, and accepting it navigates there.
+In a book the prompt offers the chapter that was being read.
+Accepting it opens that chapter at the stored position.
+When the reader opens the stored chapter again, the prompt offers the stored position in it, as on any other page.
 
 ## How a book is detected
 

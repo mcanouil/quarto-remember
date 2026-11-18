@@ -58,7 +58,8 @@ extensions:
 
 ## Books
 
-In a book the extension remembers the chapter as well as the position in it, and a return visit offers that chapter rather than a scroll.
+In a book the extension remembers the chapter as well as the position in it.
+A return visit offers that chapter, and Resume opens it at the stored position.
 
 ```yaml
 extensions:
