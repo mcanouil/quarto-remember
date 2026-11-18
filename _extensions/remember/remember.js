@@ -824,12 +824,11 @@
     leaving = true;
     markSessionActive();
     window.location.href = position.url + (position.hash || '');
-    // The page is still here only when the navigation was cancelled, for
-    // example with Escape or Stop: the page saves again, and the note goes,
-    // so a later visit does not scroll without the banner.
+    // A page still here after the wait had its navigation cancelled, for
+    // example with Escape or Stop, or is waiting for a slow server. It saves
+    // again either way. The note stays for a slow server, and expires by age.
     setTimeout(() => {
       leaving = false;
-      takeResumeNote();
     }, RESUME_CANCEL_WAIT);
   }
 
