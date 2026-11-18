@@ -17,9 +17,11 @@ On a page it is the scroll position and the section; in a book it is the chapter
 ::: {.callout-tip}
 ## Try it on this site
 
-Scroll down this page, go to the [Reference](reference.qmd), then come back: the site runs the extension on itself and returns you to where you were.
-Close the tab after scrolling and open the page again to be asked first.
+The site runs the extension on itself.
+Open the [Reference](reference.qmd), scroll down, then close the tab.
+Open the Reference again in a new tab, and the prompt offers to take you back to where you were.
 The prompt is for a new visit rather than for a move around the site.
+Within a tab, a link opens a page at the top, and the browser keeps your place when you reload or go back.
 :::
 
 ## Installation
