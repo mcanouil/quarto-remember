@@ -66,7 +66,7 @@ One position is kept at a time, so reading a second page replaces the first.
 
 The prompt is deliberately quiet:
 
-- it appears on a new visit alone, which means a browser tab that has not yet moved from one page to another; within a tab that has, the position is restored without asking;
+- it appears on a new visit alone, which means a browser tab that has not yet moved from one page to another; within a tab that has, a link opens a page at the top, and the browser keeps the position only on reload and on back or forward;
 - it appears only when there is something worth restoring, which means more than 100 pixels of scroll, a section anchor, or a slide;
 - it appears at most once every five seconds;
 - it says how long ago the visit was, so the reader can judge;
