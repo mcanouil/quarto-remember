@@ -23,6 +23,8 @@
   const SESSION_ACTIVE_KEY = 'quarto-remember-session-active';
   const RESUME_NOTE_KEY = 'quarto-remember-resume';
   const RESUME_NOTE_MAX_AGE = 30000;
+  const RESUME_LOAD_WAIT = 3000;
+  const RESUME_CANCEL_WAIT = 5000;
   const CONFIG_ELEMENT_ID = 'quarto-remember-config';
   const PROMPT_COOLDOWN = 5000;
 
@@ -822,6 +824,13 @@
     leaving = true;
     markSessionActive();
     window.location.href = position.url + (position.hash || '');
+    // The page is still here only when the navigation was cancelled, for
+    // example with Escape or Stop: the page saves again, and the note goes,
+    // so a later visit does not scroll without the banner.
+    setTimeout(() => {
+      leaving = false;
+      takeResumeNote();
+    }, RESUME_CANCEL_WAIT);
   }
 
   /**
@@ -831,15 +840,23 @@
     const note = takeResumeNote();
     if (note) {
       // Images, maths and fonts above the stored position change the layout
-      // until the page has loaded, so the position is restored after that.
+      // until the page has loaded, so the position is restored after that, or
+      // after a short wait when a slow resource holds the load back.
+      let restored = false;
       const restore = () => {
+        if (restored) {
+          return;
+        }
+        restored = true;
+        window.removeEventListener('load', restore);
         restoreScrollPosition(note);
         setupScrollTracking();
       };
       if (document.readyState === 'complete') {
         restore();
       } else {
-        window.addEventListener('load', restore, { once: true });
+        window.addEventListener('load', restore);
+        setTimeout(restore, RESUME_LOAD_WAIT);
       }
       return;
     }
