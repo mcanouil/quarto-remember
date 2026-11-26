@@ -18,7 +18,7 @@ local EXTENSION_NAME = 'remember'
 local html_mod = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/html.lua'):gsub('%.lua$', ''))
 local log = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/logging.lua'):gsub('%.lua$', ''))
 local str = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/string.lua'):gsub('%.lua$', ''))
-local metadata = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/metadata.lua'):gsub('%.lua$', ''))
+local engine = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/engine.lua'):gsub('%.lua$', ''))
 local schema = require(quarto.utils.resolve_path('_vendor/quarto-wizard/schema.lua'):gsub('%.lua$', ''))
 local check = require(quarto.utils.resolve_path('_vendor/quarto-lua-modules/schema-check.lua'):gsub('%.lua$', ''))
 
@@ -40,19 +40,20 @@ local checker = check.new(schema, EXTENSION_NAME)
 -- HELPER FUNCTIONS (PRIVATE)
 -- ============================================================================
 
---- Resolve the Quarto project type from `QUARTO_EXECUTE_INFO`.
+--- Resolve the Quarto project type, on Quarto 1 and Quarto 2 alike.
 --- Returns one of `"book"`, `"website"`, or `"default"`.
 --- `"default"` covers single documents and any project whose type is neither
 --- a book nor a website. A book is checked first, because a book project also
 --- carries `website` metadata.
---- When the variable is unset, or the file has no `format.metadata` table, the
---- function returns `"default"` with no warning. When the file cannot be read,
---- is empty, or is not valid JSON, it logs a warning and returns `"default"`,
---- so detection degrades safely.
+--- Quarto 1 gives the project through `QUARTO_EXECUTE_INFO`, and Quarto 2
+--- through the document metadata. When `QUARTO_EXECUTE_INFO` cannot be read, is
+--- empty, or is not valid JSON, the function logs a warning and returns
+--- `"default"`, so detection degrades safely.
+--- @param meta table The document metadata
 --- @return string project_type One of `"book"`, `"website"`, or `"default"`
-local function resolve_project_type()
-  local format_meta, reason = metadata.get_project_metadata()
-  if not format_meta then
+local function resolve_project_type(meta)
+  local kind, reason = engine.project_kind(meta)
+  if reason then
     if reason == 'file is unreadable' then
       log.log_warning(EXTENSION_NAME,
         "Could not open QUARTO_EXECUTE_INFO at '" .. os.getenv('QUARTO_EXECUTE_INFO') ..
@@ -67,9 +68,7 @@ local function resolve_project_type()
     return 'default'
   end
 
-  if format_meta['book'] then return 'book' end
-  if format_meta['website'] then return 'website' end
-  return 'default'
+  return kind or 'default'
 end
 
 --- Normalise a resolved list option to a list of strings.
@@ -232,7 +231,7 @@ local function inject_dependencies(meta)
     stylesheets = { 'remember.css' },
   })
 
-  local project_type = resolve_project_type()
+  local project_type = resolve_project_type(meta)
   -- The schema decides the value, so `separate-chapter-state: no` turns the
   -- feature off. Reading the document itself left it on.
   local separate_chapter_state = checker:option('separate-chapter-state') == true
